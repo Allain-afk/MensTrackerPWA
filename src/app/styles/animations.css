@@ -1,0 +1,31 @@
+/* animations.css - Modern iOS/Material easing curves and micro-animations */
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpFadeIn 0.22s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+/* Tactile feedback for buttons */
+.tap-active {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tap-active:active {
+  transform: scale(0.96);
+}
+
+/* Shared element morph style for tab indicators */
+.tab-indicator-transition {
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
