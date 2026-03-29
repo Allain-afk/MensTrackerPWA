@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import App from './app/App';
+import './app/utils/pwaInstall';
 import './styles/index.css';
 import './app/styles/animations.css';
 

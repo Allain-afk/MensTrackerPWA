@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
 import { InAppReminderPrompt } from './InAppReminderPrompt';
+import { PwaInstallGuide } from './PwaInstallGuide';
 
 export function Layout() {
   const location = useLocation();
@@ -35,6 +36,7 @@ export function Layout() {
       </main>
 
       <InAppReminderPrompt />
+      <PwaInstallGuide />
 
       {/* Bottom Navigation */}
       <BottomNav />
