@@ -21,7 +21,6 @@ import { useCycle } from '../context/CycleContext';
 import { resetAllData } from '../data/store';
 import { APP_COPY, withAppName } from '../config/appCopy';
 import { createEncryptedBackup, downloadBackupFile, restoreEncryptedBackup } from '../utils/offlineBackup';
-import { generateCsvExport, downloadCsvFile } from '../utils/offlineExportCsv';
 import {
   WEB_NOTIFICATION_SUPPORT_MESSAGE,
   type NotificationSettings,
@@ -176,17 +175,6 @@ export function SettingsScreen() {
       setStatusMessage(message);
     } finally {
       setBackupBusy(false);
-    }
-  };
-
-  const handleExportCsv = () => {
-    try {
-      const csv = generateCsvExport(logs);
-      downloadCsvFile(csv);
-      setStatusMessage('Health report exported as CSV. Open it in any spreadsheet app.');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'CSV export failed.';
-      setStatusMessage(message);
     }
   };
 
@@ -630,7 +618,7 @@ export function SettingsScreen() {
               </label>
             </div>
             <button
-              onClick={handleExportCsv}
+              hidden
               disabled={Object.keys(logs).length === 0}
               style={{
                 width: '100%',
@@ -732,7 +720,6 @@ export function SettingsScreen() {
                 on={notifications[key as keyof NotificationSettings]}
                 onToggle={() => toggleNotification(key as keyof typeof notifications)}
                 color={color}
-                disabled
               />
             </div>
           ))}

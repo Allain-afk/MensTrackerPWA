@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
+import { InAppReminderPrompt } from './InAppReminderPrompt';
 
 export function Layout() {
   const location = useLocation();
@@ -32,6 +33,8 @@ export function Layout() {
       >
         <Outlet />
       </main>
+
+      <InAppReminderPrompt />
 
       {/* Bottom Navigation */}
       <BottomNav />
