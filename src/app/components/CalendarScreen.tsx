@@ -431,11 +431,11 @@ export function CalendarScreen() {
         </div>
 
         {/* Global Month Label (Updates on scroll) */}
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '40px', justifyContent: 'center' }}>
-          <span style={{ fontSize: '17px', fontWeight: 800, color: '#1F2937', letterSpacing: '-0.3px', transition: 'all 0.2s' }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '44px', justifyContent: 'center' }}>
+          <span style={{ fontSize: '17px', fontWeight: 800, color: '#1F2937', letterSpacing: '-0.3px', transition: 'all 0.2s', lineHeight: 1 }}>
             {MONTHS[visMonth]} {visYear}
           </span>
-          <div style={{ height: '20px', overflow: 'hidden' }}>
+          <div style={{ minHeight: '22px', display: 'flex', alignItems: 'center' }}>
             {!isCurrentMonthVisible && (
               <button
                 className="tap-active"
@@ -443,16 +443,20 @@ export function CalendarScreen() {
                   virtuosoRef.current?.scrollToIndex({ index: INITIAL_INDEX, behavior: 'smooth', align: 'start' });
                 }}
                 style={{ 
-                  margin: '3px auto 0', 
-                  fontSize: '10px', 
+                  margin: '4px auto 0', 
+                  fontSize: '11px', 
                   fontWeight: 700, 
                   color: '#A855F7', 
-                  background: 'rgba(255,255,255,0.5)', 
-                  border: '1px solid #E9D5FF', 
+                  background: 'rgba(255,255,255,0.7)', 
+                  border: '1.5px solid #E9D5FF', 
                   borderRadius: '12px',
-                  padding: '2px 8px',
+                  padding: '3px 10px',
                   cursor: 'pointer', 
-                  fontFamily: "'Nunito', sans-serif" 
+                  fontFamily: "'Nunito', sans-serif",
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 2px 8px rgba(168,85,247,0.1)'
                 }}
               >
                 ↩ Back to today
