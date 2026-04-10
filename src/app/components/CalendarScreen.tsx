@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router';
 import { Plus, Edit3 } from 'lucide-react';
 import { useCycle, dateToKey, keyToDate } from '../context/CycleContext';
 import type { DayLog } from '../context/CycleContext';
-// unused
-import { APP_COPY } from '../config/appCopy';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 
 const MONTHS = [
@@ -618,24 +616,6 @@ export function CalendarScreen() {
               {periodEditStatus}
             </p>
           )}
-        </div>
-      )}
-
-      {/* ── empty state / detail card ────────────────────────────── */}
-      {totalLogs === 0 && !periodEditMode && (
-        <div className="animate-slide-up" style={{ margin: '14px 16px', background: 'linear-gradient(135deg, #fdf2f8, #f5f3ff)', border: '1.5px solid #E9D5FF', borderRadius: '20px', padding: '20px', textAlign: 'center', zIndex: 10 }}>
-          <p style={{ margin: '0 0 6px', fontSize: '28px' }}>🌸</p>
-          <p style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 800, color: '#1F2937' }}>{APP_COPY.calendarEmptyTitle}</p>
-          <p style={{ margin: '0 0 14px', fontSize: '12px', color: '#9CA3AF', fontWeight: 600, lineHeight: 1.5 }}>
-            Tap any past day to log your symptoms.<br />Mark period days to unlock cycle predictions.
-          </p>
-          <button
-            className="tap-active"
-            onClick={() => navigate('/log')}
-            style={{ padding: '11px 24px', background: 'linear-gradient(135deg, #F472B6, #8B5CF6)', border: 'none', borderRadius: '999px', color: 'white', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Nunito', sans-serif", boxShadow: '0 4px 16px rgba(168,85,247,0.3)' }}
-          >
-            Log Today 🌸
-          </button>
         </div>
       )}
 

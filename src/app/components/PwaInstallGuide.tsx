@@ -27,7 +27,7 @@ function dismissGuide() {
 function getGuideSteps(context: ReturnType<typeof getInstallGuideContext>) {
   if (context.canInstallDirectly) {
     return {
-      badge: 'Installable',
+      badge: context.isAndroid ? 'Android Install' : 'Installable',
       title: 'Install MensTracker on your phone',
       description: 'Save it to your home screen so it opens like a regular app and loads faster next time.',
       primaryLabel: 'Install App',
@@ -67,6 +67,20 @@ function getGuideSteps(context: ReturnType<typeof getInstallGuideContext>) {
     };
   }
 
+  if (context.isAndroid) {
+    return {
+      badge: 'Add to Home Screen',
+      title: 'Turn MensTracker into an app',
+      description: 'You can save this to your Android home screen so it opens full-screen like a normal app.',
+      primaryLabel: '',
+      steps: [
+        { title: 'Open browser menu', body: 'Tap the three-dot menu icon (⋮) in your browser.' },
+        { title: 'Tap Add to Home screen', body: 'Select "Add to Home screen" or "Install app" from the menu.' },
+        { title: 'Tap Add', body: 'The MensTracker icon will be ready on your home screen after that.' },
+      ] satisfies StepContent[],
+    };
+  }
+
   return {
     badge: 'Install Tip',
     title: 'Add MensTracker to your home screen',
@@ -89,7 +103,7 @@ function StepIcon({ context, index }: { context: ReturnType<typeof getInstallGui
     return <Share2 size={16} strokeWidth={2.4} color="#ec4899" />;
   }
 
-  if ((context.isIOS || context.needsSafari) && index === 1) {
+  if ((context.isIOS || context.needsSafari || context.isAndroid) && index === 1) {
     return <PlusSquare size={16} strokeWidth={2.4} color="#8b5cf6" />;
   }
 
