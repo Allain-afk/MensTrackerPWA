@@ -10,6 +10,7 @@ import { OnboardingScreen } from './components/OnboardingScreen';
 import { NotificationSync } from './components/NotificationSync';
 import { PwaUpdateToast } from './components/PwaUpdateToast';
 import { RouteLoader } from './components/RouteStateScreens';
+import { FeedbackSurvey } from './components/FeedbackSurvey';
 
 type Phase = 'splash' | 'onboarding' | 'app';
 
@@ -91,6 +92,7 @@ export default function App() {
         <CycleProvider>
           <NotificationSync />
           <PwaUpdateToast />
+          <FeedbackSurvey />
           <AppFlow />
           <Toaster position="top-center" />
         </CycleProvider>

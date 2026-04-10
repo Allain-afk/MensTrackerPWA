@@ -375,8 +375,8 @@ export function CalendarScreen() {
   const selectedMonthNum = selectedKey ? parseInt(selectedKey.split('-')[1]) - 1 : null;
   const selectedYearObj = selectedKey ? parseInt(selectedKey.split('-')[0]) : null;
 
-  const totalLogs = Object.keys(logs).length;
-  
+
+
   const { year: visYear, month: visMonth } = getMonthYearFromIndex(visibleMonthIndex);
   const isCurrentMonthVisible = visYear === today.getFullYear() && visMonth === today.getMonth();
 

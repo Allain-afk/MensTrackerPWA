@@ -50,5 +50,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: [
+      '@supabase/supabase-js',
+      '@supabase/functions-js',
+      '@supabase/realtime-js',
+      '@supabase/storage-js',
+      '@supabase/postgrest-js',
+      '@supabase/auth-js',
+    ],
+  },
   assetsInclude: ['**/*.svg', '**/*.csv', '**/*.woff2'],
 });
+
