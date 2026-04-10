@@ -14,7 +14,7 @@ export function Layout() {
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        background: '#FAFAFA',
+        background: '#F8F4FF',
         fontFamily: "'Nunito', sans-serif",
         position: 'relative',
         overflow: 'hidden',

@@ -128,7 +128,7 @@ export function HomeScreen() {
     : '—';
 
   return (
-    <div style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+    <div style={{ height: '100%', background: '#F8F4FF', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
@@ -247,17 +247,17 @@ export function HomeScreen() {
       </div>
 
       {/* ── Stats Row ─────────────────────────────────────────────────────── */}
-      <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+      <div style={{ padding: '16px 16px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           {[
-            { icon: <Droplets size={15} color="#EC4899" />, label: 'Cycle Day', value: cycleDay != null ? `${cycleDay}` : '—' },
-            { icon: <Moon size={15} color="#8B5CF6" />, label: 'Next Period', value: nextPeriodLabel },
-            { icon: <Flower2 size={15} color="#10B981" />, label: 'Fertile', value: fertileLabel },
+            { icon: <Droplets size={16} color="#EC4899" />, label: 'Cycle Day', value: cycleDay != null ? `${cycleDay}` : '—' },
+            { icon: <Moon size={16} color="#8B5CF6" />, label: 'Next Period', value: nextPeriodLabel },
+            { icon: <Flower2 size={16} color="#10B981" />, label: 'Fertile', value: fertileLabel },
           ].map((stat) => (
-            <div key={stat.label} style={{ background: '#ffffff', borderRadius: '16px', padding: '12px 8px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #F3F4F6' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4px' }}>{stat.icon}</div>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: '#1F2937' }}>{stat.value}</div>
-              <div style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 600, marginTop: '2px' }}>{stat.label}</div>
+            <div key={stat.label} style={{ background: '#ffffff', borderRadius: '24px', padding: '14px 8px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>{stat.icon}</div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#1F2937' }}>{stat.value}</div>
+              <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, marginTop: '2px' }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -284,21 +284,22 @@ export function HomeScreen() {
       )}
 
       {/* ── CTA Button ───────────────────────────────────────────────────── */}
-      <div style={{ padding: '14px 16px 0' }}>
+      <div style={{ padding: '16px 16px 0' }}>
         <button
           onClick={() => navigate('/log')}
           style={{
-            width: '100%', padding: '15px 24px',
+            width: '100%', padding: '18px 28px',
             background: 'linear-gradient(135deg, #F472B6 0%, #C084FC 50%, #8B5CF6 100%)',
-            border: 'none', borderRadius: '999px', color: 'white', fontSize: '15px', fontWeight: 800,
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            border: 'none', borderRadius: '9999px', color: 'white', fontSize: '16px', fontWeight: 800,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
             boxShadow: '0 8px 24px rgba(168,85,247,0.35)', fontFamily: "'Nunito', sans-serif",
-            letterSpacing: '0.3px', transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+            letterSpacing: '0.4px', transition: 'transform 0.15s ease, box-shadow 0.15s ease',
           }}
-          onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)'; }}
+          onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.96)'; }}
           onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
         >
-          <span style={{ fontSize: '17px' }}>🌸</span>
+          <span style={{ fontSize: '18px' }}>🌸</span>
           {todayLog ? "Edit Today's Log" : "Log Today's Symptoms"}
         </button>
       </div>

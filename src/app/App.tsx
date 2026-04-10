@@ -18,12 +18,12 @@ function PhoneShell({ children }: { children: ReactNode }) {
     <div
       className="min-h-dvh flex items-stretch justify-center sm:items-center sm:p-6"
       style={{
-        background: 'linear-gradient(145deg, #fce7f3 0%, #f3e8ff 50%, #ddd6fe 100%)',
+        background: 'linear-gradient(145deg, #fdf2f8 0%, #f8f4ff 50%, #f3e8ff 100%)',
         fontFamily: "'Nunito', sans-serif",
       }}
     >
       <div
-        className="relative w-full h-dvh overflow-hidden bg-[#FAFAFA] sm:h-[844px] sm:w-[390px] sm:rounded-[48px] sm:shadow-[0_0_0_10px_#1a1a2e,0_40px_80px_rgba(0,0,0,0.35)] sm:flex-shrink-0"
+        className="relative w-full h-dvh overflow-hidden bg-[#F8F4FF] sm:h-[844px] sm:w-[390px] sm:rounded-[48px] sm:shadow-[0_0_0_10px_#1a1a2e,0_40px_80px_rgba(0,0,0,0.35)] sm:flex-shrink-0"
         style={{
           width: '100%',
           height: '100dvh',
