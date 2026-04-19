@@ -127,10 +127,12 @@ const MonthGrid = memo(({
                   data-day-future={future ? 'true' : 'false'}
                   aria-label={`${MONTHS[month]} ${day}, ${year}${period ? ', period day' : ''}${predicted && !period ? ', predicted period' : ''}${fertile ? ', fertile window' : ''}${isToday ? ', today' : ''}${hasIntimacy ? ', intimacy logged' : ''}`}
                   aria-pressed={selected}
-                  onClick={() => {
+                  onClick={(e) => {
                     if (periodEditMode) {
+                      // Pointer taps are handled by onPointerDown; this branch
+                      // only runs for keyboard activation (detail === 0).
+                      if (e.detail !== 0) return;
                       if (future) return;
-                      // Toggle selection via keyboard/click (tap).
                       startPeriodDragSelection(key);
                       endPeriodDragSelection();
                       return;
@@ -140,19 +142,10 @@ const MonthGrid = memo(({
                   onPointerDown={(e) => {
                     if (!periodEditMode || future) return;
                     e.preventDefault();
-                    startPeriodDragSelection(key);
-                    e.currentTarget.setPointerCapture?.(e.pointerId);
-                  }}
-                  onPointerEnter={(e) => {
-                    if (!periodEditMode || future) return;
-                    if (e.buttons > 0) { // Only if held down
-                       applyDragSelectionToKey(key);
-                    }
-                  }}
-                  onPointerUp={(e) => {
-                    if (!periodEditMode) return;
+                    // Touch pointers get implicit pointer capture, which
+                    // blocks hit-testing on sibling day cells during drag.
                     e.currentTarget.releasePointerCapture?.(e.pointerId);
-                    endPeriodDragSelection();
+                    startPeriodDragSelection(key);
                   }}
                   style={{
                     height: '52px',
@@ -354,11 +347,28 @@ export function CalendarScreen() {
   }, []);
 
   useEffect(() => {
-    // Add global pointer up listener to catch mouse releases outside the component
     const handlePointerUp = () => endPeriodDragSelection();
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDraggingPeriodSelectionRef.current) return;
+      // elementFromPoint works reliably on touch (where pointerenter on
+      // siblings doesn't fire due to implicit capture semantics).
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el) return;
+      const dayEl = (el as Element).closest?.('[data-day-key]') as HTMLElement | null;
+      if (!dayEl) return;
+      if (dayEl.dataset.dayFuture === 'true') return;
+      const key = dayEl.dataset.dayKey;
+      if (key) applyDragSelectionToKey(key);
+    };
     window.addEventListener('pointerup', handlePointerUp);
-    return () => window.removeEventListener('pointerup', handlePointerUp);
-  }, [endPeriodDragSelection]);
+    window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
+    return () => {
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+    };
+  }, [endPeriodDragSelection, applyDragSelectionToKey]);
 
   const applyPeriodSelection = () => {
     if (!periodEditKeys.size) return;
