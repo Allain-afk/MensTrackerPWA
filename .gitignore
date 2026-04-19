@@ -24,3 +24,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# supabase
+supabase
+.mcp.json

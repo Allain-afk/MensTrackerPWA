@@ -12,10 +12,25 @@ import {
   type NotificationSettings,
 } from './models';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const DATABASE_NAME = 'menstracker.sqlite3';
 
 const { sql } = new SQLocal(DATABASE_NAME);
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+export interface DayLogWithMeta {
+  dateKey: string;
+  log: DayLog;
+  updatedAt: string;
+}
+
+export interface Tombstone {
+  dateKey: string;
+  deletedAt: string;
+}
 
 type SqlRow = Record<string, unknown>;
 
@@ -111,6 +126,35 @@ async function withTransaction<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
+async function columnExists(table: string, column: string): Promise<boolean> {
+  // sqlocal template tag only supports bound values; PRAGMA table_info is via identifier in SQL text.
+  const rows = (await sql`SELECT 1 AS one FROM pragma_table_info(${table}) WHERE name = ${column}`) as SqlRow[];
+  return rows.length > 0;
+}
+
+async function runMigrations(): Promise<void> {
+  const metaRows = (await sql`SELECT value FROM app_meta WHERE key = 'schema_version'`) as SqlRow[];
+  const currentVersion = metaRows.length ? parseInt(asString(metaRows[0].value), 10) || 0 : 0;
+
+  if (currentVersion < 2) {
+    // Add updated_at to singleton tables (safe if already present).
+    const singletonColumns: Array<[string, string]> = [
+      ['user_profile', 'updated_at'],
+      ['cycle_settings', 'updated_at'],
+      ['notification_settings', 'updated_at'],
+      ['app_preferences', 'updated_at'],
+    ];
+    for (const [table, column] of singletonColumns) {
+      if (!(await columnExists(table, column))) {
+        if (table === 'user_profile') await sql`ALTER TABLE user_profile ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+        else if (table === 'cycle_settings') await sql`ALTER TABLE cycle_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+        else if (table === 'notification_settings') await sql`ALTER TABLE notification_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+        else if (table === 'app_preferences') await sql`ALTER TABLE app_preferences ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+      }
+    }
+  }
+}
+
 async function initializeInternal(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS app_meta (
@@ -169,6 +213,21 @@ async function initializeInternal(): Promise<void> {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS deleted_day_logs (
+      date_key TEXT PRIMARY KEY,
+      deleted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS sync_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `;
+
+  await runMigrations();
+
   await sql`
     INSERT INTO app_meta (key, value)
     VALUES ('schema_version', ${String(SCHEMA_VERSION)})
@@ -328,16 +387,16 @@ export async function loadAppSnapshot(): Promise<AppDataSnapshot> {
   return snapshot;
 }
 
-export async function saveUserName(name: string): Promise<void> {
+export async function saveUserName(name: string, updatedAt: string = nowIso()): Promise<void> {
   await initializeStore();
   await sql`
-    INSERT INTO user_profile (id, name)
-    VALUES (1, ${name})
-    ON CONFLICT(id) DO UPDATE SET name = excluded.name
+    INSERT INTO user_profile (id, name, updated_at)
+    VALUES (1, ${name}, ${updatedAt})
+    ON CONFLICT(id) DO UPDATE SET name = excluded.name, updated_at = excluded.updated_at
   `;
 }
 
-export async function saveCycleSettings(settings: CycleSettings): Promise<void> {
+export async function saveCycleSettings(settings: CycleSettings, updatedAt: string = nowIso()): Promise<void> {
   await initializeStore();
   await sql`
     INSERT INTO cycle_settings (
@@ -345,24 +404,27 @@ export async function saveCycleSettings(settings: CycleSettings): Promise<void> 
       cycle_length,
       period_length,
       use_adaptive_predictions,
-      perimenopause_mode
+      perimenopause_mode,
+      updated_at
     )
     VALUES (
       1,
       ${settings.cycleLength},
       ${settings.periodLength},
       ${settings.useAdaptivePredictions ? 1 : 0},
-      ${settings.perimenopauseMode ? 1 : 0}
+      ${settings.perimenopauseMode ? 1 : 0},
+      ${updatedAt}
     )
     ON CONFLICT(id) DO UPDATE SET
       cycle_length = excluded.cycle_length,
       period_length = excluded.period_length,
       use_adaptive_predictions = excluded.use_adaptive_predictions,
-      perimenopause_mode = excluded.perimenopause_mode
+      perimenopause_mode = excluded.perimenopause_mode,
+      updated_at = excluded.updated_at
   `;
 }
 
-export async function saveNotificationSettings(settings: NotificationSettings): Promise<void> {
+export async function saveNotificationSettings(settings: NotificationSettings, updatedAt: string = nowIso()): Promise<void> {
   await initializeStore();
   await sql`
     INSERT INTO notification_settings (
@@ -370,20 +432,23 @@ export async function saveNotificationSettings(settings: NotificationSettings): 
       period_reminder,
       fertile_window,
       daily_log,
-      insights
+      insights,
+      updated_at
     )
     VALUES (
       1,
       ${settings.periodReminder ? 1 : 0},
       ${settings.fertileWindow ? 1 : 0},
       ${settings.dailyLog ? 1 : 0},
-      ${settings.insights ? 1 : 0}
+      ${settings.insights ? 1 : 0},
+      ${updatedAt}
     )
     ON CONFLICT(id) DO UPDATE SET
       period_reminder = excluded.period_reminder,
       fertile_window = excluded.fertile_window,
       daily_log = excluded.daily_log,
-      insights = excluded.insights
+      insights = excluded.insights,
+      updated_at = excluded.updated_at
   `;
 }
 
@@ -412,7 +477,7 @@ export async function saveAppPreferences(preferences: AppPreferences): Promise<v
   `;
 }
 
-export async function upsertDayLog(dateKey: string, log: DayLog): Promise<void> {
+export async function upsertDayLog(dateKey: string, log: DayLog, updatedAt: string = nowIso()): Promise<void> {
   await initializeStore();
   const next = logToInsertable(dateKey, log);
 
@@ -447,7 +512,7 @@ export async function upsertDayLog(dateKey: string, log: DayLog): Promise<void> 
       ${next.energyLevel},
       ${next.waterGlasses},
       ${next.cervicalMucus},
-      CURRENT_TIMESTAMP
+      ${updatedAt}
     )
     ON CONFLICT(date_key) DO UPDATE SET
       flow = excluded.flow,
@@ -462,16 +527,91 @@ export async function upsertDayLog(dateKey: string, log: DayLog): Promise<void> 
       energy_level = excluded.energy_level,
       water_glasses = excluded.water_glasses,
       cervical_mucus = excluded.cervical_mucus,
-      updated_at = CURRENT_TIMESTAMP
+      updated_at = excluded.updated_at
+  `;
+  // Clear any prior tombstone — the row is alive again.
+  await sql`DELETE FROM deleted_day_logs WHERE date_key = ${dateKey}`;
+}
+
+export async function deleteDayLog(dateKey: string, deletedAt: string = nowIso()): Promise<void> {
+  await initializeStore();
+  await sql`DELETE FROM day_logs WHERE date_key = ${dateKey}`;
+  await sql`
+    INSERT INTO deleted_day_logs (date_key, deleted_at)
+    VALUES (${dateKey}, ${deletedAt})
+    ON CONFLICT(date_key) DO UPDATE SET deleted_at = excluded.deleted_at
   `;
 }
 
-export async function deleteDayLog(dateKey: string): Promise<void> {
+// ─── Sync helpers ────────────────────────────────────────────────────────────
+
+export async function getSyncMeta(key: string): Promise<string | null> {
+  await initializeStore();
+  const rows = (await sql`SELECT value FROM sync_meta WHERE key = ${key}`) as SqlRow[];
+  return rows.length ? asString(rows[0].value) : null;
+}
+
+export async function setSyncMeta(key: string, value: string): Promise<void> {
   await initializeStore();
   await sql`
-    DELETE FROM day_logs
-    WHERE date_key = ${dateKey}
+    INSERT INTO sync_meta (key, value) VALUES (${key}, ${value})
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value
   `;
+}
+
+export async function listDayLogsUpdatedAfter(since: string): Promise<DayLogWithMeta[]> {
+  await initializeStore();
+  const rows = (await sql`
+    SELECT date_key, flow, moods_json, symptoms_json, notes, is_period, had_intimacy,
+           protection_used, intimacy_notes, sleep_quality, energy_level, water_glasses,
+           cervical_mucus, updated_at
+    FROM day_logs
+    WHERE updated_at > ${since}
+  `) as SqlRow[];
+  return rows.map((row) => ({
+    dateKey: asString(row.date_key),
+    log: rowToDayLog(row),
+    updatedAt: asString(row.updated_at),
+  }));
+}
+
+export async function listTombstonesDeletedAfter(since: string): Promise<Tombstone[]> {
+  await initializeStore();
+  const rows = (await sql`
+    SELECT date_key, deleted_at FROM deleted_day_logs WHERE deleted_at > ${since}
+  `) as SqlRow[];
+  return rows.map((row) => ({ dateKey: asString(row.date_key), deletedAt: asString(row.deleted_at) }));
+}
+
+export async function getDayLogMeta(dateKey: string): Promise<{ updatedAt: string } | null> {
+  await initializeStore();
+  const rows = (await sql`SELECT updated_at FROM day_logs WHERE date_key = ${dateKey}`) as SqlRow[];
+  if (!rows.length) return null;
+  return { updatedAt: asString(rows[0].updated_at) };
+}
+
+export async function getTombstone(dateKey: string): Promise<{ deletedAt: string } | null> {
+  await initializeStore();
+  const rows = (await sql`SELECT deleted_at FROM deleted_day_logs WHERE date_key = ${dateKey}`) as SqlRow[];
+  if (!rows.length) return null;
+  return { deletedAt: asString(rows[0].deleted_at) };
+}
+
+export async function getSingletonUpdatedAt(
+  entity: 'profile' | 'cycle' | 'notifications'
+): Promise<string> {
+  await initializeStore();
+  const table =
+    entity === 'profile' ? 'user_profile'
+    : entity === 'cycle' ? 'cycle_settings'
+    : 'notification_settings';
+  const rows =
+    table === 'user_profile'
+      ? ((await sql`SELECT updated_at FROM user_profile WHERE id = 1`) as SqlRow[])
+      : table === 'cycle_settings'
+      ? ((await sql`SELECT updated_at FROM cycle_settings WHERE id = 1`) as SqlRow[])
+      : ((await sql`SELECT updated_at FROM notification_settings WHERE id = 1`) as SqlRow[]);
+  return rows.length ? asString(rows[0].updated_at) : '';
 }
 
 export async function resetAllData(): Promise<void> {

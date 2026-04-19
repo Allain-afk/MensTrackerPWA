@@ -22,6 +22,7 @@ import { resetAllData } from '../data/store';
 import { APP_COPY, withAppName } from '../config/appCopy';
 import { createEncryptedBackup, downloadBackupFile, restoreEncryptedBackup } from '../utils/offlineBackup';
 import { generateCsvExport, downloadCsvFile } from '../utils/offlineExportCsv';
+import { CloudSyncSection } from './CloudSyncSection';
 import {
   WEB_NOTIFICATION_SUPPORT_MESSAGE,
   type NotificationSettings,
@@ -335,6 +336,8 @@ export function SettingsScreen() {
             </button>
           )}
         </div>
+
+        <CloudSyncSection />
 
         {/* Cycle Settings */}
         <div

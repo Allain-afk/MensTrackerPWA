@@ -25,6 +25,7 @@ import {
   upsertDayLog,
   deleteDayLog,
 } from '../data/store';
+import { requestSync } from '../utils/syncService';
 
 interface AppDataContextValue {
   ready: boolean;
@@ -80,6 +81,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     void saveUserName(name).catch((error) => {
       console.error('Failed to save user name.', error);
     });
+    requestSync();
   }, []);
 
   const updateCycleSettings = useCallback((patch: Partial<CycleSettings>) => {
@@ -92,6 +94,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       void saveCycleSettings(nextSettings).catch((error) => {
         console.error('Failed to save cycle settings.', error);
       });
+      requestSync();
 
       return {
         ...previous,
@@ -108,6 +111,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     void saveNotificationSettings(settings).catch((error) => {
       console.error('Failed to save notification settings.', error);
     });
+    requestSync();
   }, []);
 
   const updatePreferences = useCallback((patch: Partial<AppPreferences>) => {
@@ -139,6 +143,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     void upsertDayLog(dateKey, log).catch((error) => {
       console.error(`Failed to save log for ${dateKey}.`, error);
     });
+    requestSync();
   }, []);
 
   const deleteLog = useCallback((dateKey: string) => {
@@ -153,6 +158,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     void deleteDayLog(dateKey).catch((error) => {
       console.error(`Failed to delete log for ${dateKey}.`, error);
     });
+    requestSync();
   }, []);
 
   const value = useMemo<AppDataContextValue>(

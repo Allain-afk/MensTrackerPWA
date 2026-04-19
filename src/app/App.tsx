@@ -10,9 +10,11 @@ import { OnboardingScreen } from './components/OnboardingScreen';
 import { NotificationSync } from './components/NotificationSync';
 import { PwaUpdateToast } from './components/PwaUpdateToast';
 import { RouteLoader } from './components/RouteStateScreens';
-import { FeedbackSurvey } from './components/FeedbackSurvey';
+import { CloudSyncAnnouncement } from './components/CloudSyncAnnouncement';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
+import { AuthProvider } from './context/AuthContext';
+import { SyncProvider } from './context/SyncContext';
 
 type Phase = 'splash' | 'onboarding' | 'app';
 
@@ -90,18 +92,22 @@ function AppFlow() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppDataProvider>
-        <UserProvider>
-          <CycleProvider>
-            <NotificationSync />
-            <PwaUpdateToast />
-            <FeedbackSurvey />
-            <OfflineBanner />
-            <AppFlow />
-            <Toaster position="top-center" />
-          </CycleProvider>
-        </UserProvider>
-      </AppDataProvider>
+      <AuthProvider>
+        <AppDataProvider>
+          <SyncProvider>
+            <UserProvider>
+              <CycleProvider>
+                <NotificationSync />
+                <PwaUpdateToast />
+                <CloudSyncAnnouncement />
+                <OfflineBanner />
+                <AppFlow />
+                <Toaster position="top-center" />
+              </CycleProvider>
+            </UserProvider>
+          </SyncProvider>
+        </AppDataProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
