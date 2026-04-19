@@ -21,7 +21,8 @@ export function BottomNav() {
   const activeIndex = navItems.findIndex(item => isActive(item.path));
 
   return (
-    <div
+    <nav
+      aria-label="Primary"
       style={{
         position: 'relative',
         minHeight: '76px',
@@ -61,6 +62,8 @@ export function BottomNav() {
           <button
             key={path}
             className="tap-active"
+            aria-label={label}
+            aria-current={active ? 'page' : undefined}
             onClick={() => navigate(path)}
             style={{
               position: 'relative',
@@ -109,6 +112,6 @@ export function BottomNav() {
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

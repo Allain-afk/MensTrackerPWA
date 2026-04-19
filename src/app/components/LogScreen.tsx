@@ -195,7 +195,7 @@ export function LogScreen() {
   // ─── Saved state ─────────────────────────────────────────────────────────────
   if (saved) {
     return (
-      <div style={{ minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', gap: '16px', fontFamily: "'Nunito', sans-serif" }}>
+      <div role="status" aria-live="polite" style={{ minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', gap: '16px', fontFamily: "'Nunito', sans-serif" }}>
         <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #F472B6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 32px rgba(168,85,247,0.35)' }}>
           <Check size={36} color="white" strokeWidth={3} />
         </div>
@@ -215,9 +215,10 @@ export function LogScreen() {
       <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <button
           onClick={handleBack}
+          aria-label="Go back"
           style={{ width: '38px', height: '38px', borderRadius: '12px', border: 'none', background: 'rgba(255,255,255,0.9)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', flexShrink: 0 }}
         >
-          <ChevronLeft size={20} color="#6D28D9" />
+          <ChevronLeft size={20} color="#6D28D9" aria-hidden="true" />
         </button>
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#1a1a2e' }}>

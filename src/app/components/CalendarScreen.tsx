@@ -29,7 +29,20 @@ const SYMPTOM_EMOJI: Record<string, string> = {
   'Joint Pain': '🦴', 'Appetite Changes': '🍽️', Cravings: '🍫', 'Pelvic Pressure': '🫁',
 };
 
-const INITIAL_INDEX = 1200;
+const TOTAL_MONTHS = 600; // 50 years window (25 back, 25 forward)
+const INITIAL_INDEX = 300;
+
+interface MonthGridProps {
+  index: number;
+  periodEditMode: boolean;
+  periodEditKeys: Set<string>;
+  selectedKey: string | null;
+  setSelectedKey: React.Dispatch<React.SetStateAction<string | null>>;
+  intimacyFilterOn: boolean;
+  applyDragSelectionToKey: (key: string) => void;
+  startPeriodDragSelection: (key: string) => void;
+  endPeriodDragSelection: () => void;
+}
 
 const getMonthYearFromIndex = (index: number) => {
   const today = new Date();
@@ -47,7 +60,7 @@ const MonthGrid = memo(({
   applyDragSelectionToKey,
   startPeriodDragSelection,
   endPeriodDragSelection
-}: any) => {
+}: MonthGridProps) => {
   const { year, month } = useMemo(() => getMonthYearFromIndex(index), [index]);
   const { logs, isPeriodDay, isPredictedPeriod, isFertileDay } = useCycle();
 
@@ -112,9 +125,17 @@ const MonthGrid = memo(({
                   key={di}
                   data-day-key={key}
                   data-day-future={future ? 'true' : 'false'}
+                  aria-label={`${MONTHS[month]} ${day}, ${year}${period ? ', period day' : ''}${predicted && !period ? ', predicted period' : ''}${fertile ? ', fertile window' : ''}${isToday ? ', today' : ''}${hasIntimacy ? ', intimacy logged' : ''}`}
+                  aria-pressed={selected}
                   onClick={() => {
-                    if (periodEditMode) return;
-                    setSelectedKey((prev: string | null) => prev === key ? null : key);
+                    if (periodEditMode) {
+                      if (future) return;
+                      // Toggle selection via keyboard/click (tap).
+                      startPeriodDragSelection(key);
+                      endPeriodDragSelection();
+                      return;
+                    }
+                    setSelectedKey((prev) => prev === key ? null : key);
                   }}
                   onPointerDown={(e) => {
                     if (!periodEditMode || future) return;
@@ -234,7 +255,7 @@ const MonthGrid = memo(({
                       : isToday
                       ? '#8B5CF6'
                       : future
-                      ? '#C4B5FD'
+                      ? '#7C6ED0'
                       : '#1F2937',
                     lineHeight: 1,
                   }}>
@@ -404,6 +425,8 @@ export function CalendarScreen() {
           {/* Period edit toggle */}
           <button
             className="tap-active"
+            aria-pressed={periodEditMode}
+            aria-label={periodEditMode ? 'Exit period edit mode' : 'Edit period days'}
             onClick={() => {
               setPeriodEditMode(prev => {
                 const next = !prev;
@@ -503,7 +526,7 @@ export function CalendarScreen() {
         <Virtuoso
           ref={virtuosoRef}
           style={{ height: '100%', width: '100%' }}
-          totalCount={2400}
+          totalCount={TOTAL_MONTHS}
           initialTopMostItemIndex={INITIAL_INDEX}
           overscan={200}
           rangeChanged={(range) => {
@@ -729,6 +752,13 @@ export function CalendarScreen() {
                 )}
               </div>
 
+              {selectedLog.hadIntimacy && selectedLog.intimacyNotes?.trim() && (
+                <div style={{ background: '#FFF1F2', borderRadius: '12px', padding: '10px 14px', border: '1px solid #FECDD3' }}>
+                  <p style={{ margin: '0 0 2px', fontSize: '11px', color: '#BE185D', fontWeight: 700, letterSpacing: '0.3px' }}>INTIMACY NOTES</p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#9F1239', fontWeight: 600, lineHeight: 1.5 }}>{selectedLog.intimacyNotes}</p>
+                </div>
+              )}
+
               {/* Moods */}
               {selectedLog.moods.length > 0 && (
                 <div>
@@ -789,7 +819,28 @@ export function CalendarScreen() {
                 </>
               ) : (
                 <>
-                  <p style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 600, color: '#9CA3AF' }}>No log for this day</p>
+                  <p style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 600, color: '#6B7280' }}>No log for this day yet</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/log?date=${selectedKey}&from=calendar`)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '9px 16px',
+                      background: 'linear-gradient(135deg, #F472B6, #8B5CF6)',
+                      border: 'none',
+                      borderRadius: '999px',
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: "'Nunito', sans-serif",
+                      boxShadow: '0 4px 12px rgba(168,85,247,0.3)',
+                    }}
+                  >
+                    <Plus size={12} strokeWidth={3} aria-hidden="true" /> Log this day
+                  </button>
                 </>
               )}
             </div>

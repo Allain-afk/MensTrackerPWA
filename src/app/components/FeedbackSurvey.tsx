@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, ChevronRight, Cloud, CheckCircle2, Loader2 } from 'lucide-react';
 import { submitSurveyResponse } from '../utils/supabaseClient';
 
@@ -38,6 +38,8 @@ function PillOption({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={selected}
       onClick={onClick}
       style={{
         display: 'block',
@@ -75,20 +77,17 @@ export function FeedbackSurvey() {
   const [q3, setQ3] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (localStorage.getItem(COMPLETED_KEY)) return;
     if (sessionStorage.getItem(SESSION_KEY)) return;
 
-    timerRef.current = setTimeout(() => {
+    const timer = setTimeout(() => {
       setVisible(true);
       sessionStorage.setItem(SESSION_KEY, '1');
     }, SHOW_DELAY_MS);
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   const handleDismiss = () => setVisible(false);
@@ -443,23 +442,27 @@ export function FeedbackSurvey() {
 
               {/* Q1 */}
               <div style={{ marginBottom: '18px' }}>
-                <p className="survey-q">
+                <p className="survey-q" id="survey-q1">
                   1. Would you be interested in cloud sync so your data is backed up and never
                   lost if your browser cache is cleared?
                 </p>
-                {Q1_OPTIONS.map((opt) => (
-                  <PillOption key={opt} label={opt} selected={q1 === opt} onClick={() => setQ1(opt)} />
-                ))}
+                <div role="radiogroup" aria-labelledby="survey-q1">
+                  {Q1_OPTIONS.map((opt) => (
+                    <PillOption key={opt} label={opt} selected={q1 === opt} onClick={() => setQ1(opt)} />
+                  ))}
+                </div>
               </div>
 
               {/* Q2 */}
               <div style={{ marginBottom: '18px' }}>
-                <p className="survey-q">
+                <p className="survey-q" id="survey-q2">
                   2. If cloud sync were available, would you create an account to use it?
                 </p>
-                {Q2_OPTIONS.map((opt) => (
-                  <PillOption key={opt} label={opt} selected={q2 === opt} onClick={() => setQ2(opt)} />
-                ))}
+                <div role="radiogroup" aria-labelledby="survey-q2">
+                  {Q2_OPTIONS.map((opt) => (
+                    <PillOption key={opt} label={opt} selected={q2 === opt} onClick={() => setQ2(opt)} />
+                  ))}
+                </div>
               </div>
 
               {/* Q3 */}
@@ -480,11 +483,14 @@ export function FeedbackSurvey() {
               </div>
 
               {submitError && (
-                <p style={{
-                  margin: '0 0 12px',
-                  fontSize: 'clamp(12px, 1.7vw, 13px)',
-                  color: '#DC2626', fontWeight: 700, textAlign: 'center',
-                }}>
+                <p
+                  role="alert"
+                  aria-live="polite"
+                  style={{
+                    margin: '0 0 12px',
+                    fontSize: 'clamp(12px, 1.7vw, 13px)',
+                    color: '#DC2626', fontWeight: 700, textAlign: 'center',
+                  }}>
                   {submitError}
                 </p>
               )}

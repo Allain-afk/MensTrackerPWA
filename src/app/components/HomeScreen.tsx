@@ -56,6 +56,9 @@ function getDailyWellnessTips(currentPhase: string, today: Date): WellnessTip[] 
   return [source[firstIndex], source[secondIndex]];
 }
 
+const RING_RADIUS = 90;
+const RING_CENTER = 120;
+
 export function HomeScreen() {
   const navigate = useNavigate();
   const { name } = useUser();
@@ -78,7 +81,7 @@ export function HomeScreen() {
   const hasData = !!lastPeriodStart;
 
   const cycleLength = estimatedCycleLength || settings.cycleLength;
-  const radius = 90;
+  const radius = RING_RADIUS;
   const circumference = 2 * Math.PI * radius;
   const progress = hasData && cycleDay ? Math.min((cycleDay - 1) / cycleLength, 1) : 0;
   const strokeDashoffset = circumference * (1 - progress);
@@ -147,9 +150,10 @@ export function HomeScreen() {
           </div>
           <button
             onClick={() => navigate('/settings')}
+            aria-label={hasData ? 'Open settings' : 'Open settings (setup needed)'}
             style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.8)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)', position: 'relative' }}
           >
-            <Bell size={20} color="#6D28D9" strokeWidth={2} />
+            <Bell size={20} color="#6D28D9" strokeWidth={2} aria-hidden="true" />
             {!hasData && (
               <div style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#EC4899', borderRadius: '50%', border: '2px solid white' }} />
             )}
@@ -176,22 +180,22 @@ export function HomeScreen() {
                 </filter>
               </defs>
 
-              <circle cx="120" cy="120" r="110" fill="none" stroke="#f3e8ff" strokeWidth="1" strokeDasharray="4 6" />
-              <circle cx="120" cy="120" r={radius} fill="none" stroke="#ede9fe" strokeWidth="18" />
+              <circle cx={RING_CENTER} cy={RING_CENTER} r="110" fill="none" stroke="#f3e8ff" strokeWidth="1" strokeDasharray="4 6" />
+              <circle cx={RING_CENTER} cy={RING_CENTER} r={radius} fill="none" stroke="#ede9fe" strokeWidth="18" />
 
               {hasData && (
                 <circle
-                  cx="120" cy="120" r={radius}
+                  cx={RING_CENTER} cy={RING_CENTER} r={radius}
                   fill="none" stroke="url(#ringGrad)" strokeWidth="18"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
-                  transform="rotate(-90 120 120)"
+                  transform={`rotate(-90 ${RING_CENTER} ${RING_CENTER})`}
                   filter="url(#glow)"
                 />
               )}
 
-              <circle cx="120" cy="120" r="72" fill="url(#innerGrad)" />
+              <circle cx={RING_CENTER} cy={RING_CENTER} r="72" fill="url(#innerGrad)" />
 
               {/* Tick marks */}
               {Array.from({ length: cycleLength }).map((_, i) => {

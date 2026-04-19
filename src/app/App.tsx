@@ -11,6 +11,8 @@ import { NotificationSync } from './components/NotificationSync';
 import { PwaUpdateToast } from './components/PwaUpdateToast';
 import { RouteLoader } from './components/RouteStateScreens';
 import { FeedbackSurvey } from './components/FeedbackSurvey';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { OfflineBanner } from './components/OfflineBanner';
 
 type Phase = 'splash' | 'onboarding' | 'app';
 
@@ -87,16 +89,19 @@ function AppFlow() {
 
 export default function App() {
   return (
-    <AppDataProvider>
-      <UserProvider>
-        <CycleProvider>
-          <NotificationSync />
-          <PwaUpdateToast />
-          <FeedbackSurvey />
-          <AppFlow />
-          <Toaster position="top-center" />
-        </CycleProvider>
-      </UserProvider>
-    </AppDataProvider>
+    <ErrorBoundary>
+      <AppDataProvider>
+        <UserProvider>
+          <CycleProvider>
+            <NotificationSync />
+            <PwaUpdateToast />
+            <FeedbackSurvey />
+            <OfflineBanner />
+            <AppFlow />
+            <Toaster position="top-center" />
+          </CycleProvider>
+        </UserProvider>
+      </AppDataProvider>
+    </ErrorBoundary>
   );
 }

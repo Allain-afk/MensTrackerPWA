@@ -21,6 +21,7 @@ import { useCycle } from '../context/CycleContext';
 import { resetAllData } from '../data/store';
 import { APP_COPY, withAppName } from '../config/appCopy';
 import { createEncryptedBackup, downloadBackupFile, restoreEncryptedBackup } from '../utils/offlineBackup';
+import { generateCsvExport, downloadCsvFile } from '../utils/offlineExportCsv';
 import {
   WEB_NOTIFICATION_SUPPORT_MESSAGE,
   type NotificationSettings,
@@ -196,6 +197,8 @@ export function SettingsScreen() {
 
         {statusMessage && (
           <div
+            role="status"
+            aria-live="polite"
             style={{
               background: '#F5F3FF',
               border: '1px solid #DDD6FE',
@@ -618,7 +621,18 @@ export function SettingsScreen() {
               </label>
             </div>
             <button
-              hidden
+              onClick={() => {
+                const count = Object.keys(logs).length;
+                if (count === 0) return;
+                try {
+                  const csv = generateCsvExport(logs);
+                  downloadCsvFile(csv);
+                  setStatusMessage(`Exported ${count} day${count === 1 ? '' : 's'} to CSV.`);
+                } catch (err) {
+                  const message = err instanceof Error ? err.message : 'CSV export failed.';
+                  setStatusMessage(message);
+                }
+              }}
               disabled={Object.keys(logs).length === 0}
               style={{
                 width: '100%',
