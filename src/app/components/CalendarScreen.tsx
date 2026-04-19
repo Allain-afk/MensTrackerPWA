@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useMemo, useEffect, memo } from 'react';
+import { useRef, useState, useCallback, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router';
 import { Plus, Edit3 } from 'lucide-react';
 import { useCycle, dateToKey, keyToDate } from '../context/CycleContext';
@@ -39,9 +39,7 @@ interface MonthGridProps {
   selectedKey: string | null;
   setSelectedKey: React.Dispatch<React.SetStateAction<string | null>>;
   intimacyFilterOn: boolean;
-  applyDragSelectionToKey: (key: string) => void;
-  startPeriodDragSelection: (key: string) => void;
-  endPeriodDragSelection: () => void;
+  togglePeriodDay: (key: string) => void;
 }
 
 const getMonthYearFromIndex = (index: number) => {
@@ -57,9 +55,7 @@ const MonthGrid = memo(({
   selectedKey, 
   setSelectedKey, 
   intimacyFilterOn,
-  applyDragSelectionToKey,
-  startPeriodDragSelection,
-  endPeriodDragSelection
+  togglePeriodDay,
 }: MonthGridProps) => {
   const { year, month } = useMemo(() => getMonthYearFromIndex(index), [index]);
   const { logs, isPeriodDay, isPredictedPeriod, isFertileDay } = useCycle();
@@ -98,11 +94,8 @@ const MonthGrid = memo(({
       <h3 style={{ margin: '0 0 16px', textAlign: 'center', fontSize: '16px', fontWeight: 800, color: '#1F2937' }}>
         {MONTHS[month]} {year}
       </h3>
-      <div 
+      <div
         style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px 0' }}
-        onPointerLeave={endPeriodDragSelection}
-        onPointerCancel={endPeriodDragSelection}
-        onPointerUp={endPeriodDragSelection}
       >
         {weeks.map((week, wi) => (
           <div key={wi} style={{ display: 'contents' }}>
@@ -127,25 +120,13 @@ const MonthGrid = memo(({
                   data-day-future={future ? 'true' : 'false'}
                   aria-label={`${MONTHS[month]} ${day}, ${year}${period ? ', period day' : ''}${predicted && !period ? ', predicted period' : ''}${fertile ? ', fertile window' : ''}${isToday ? ', today' : ''}${hasIntimacy ? ', intimacy logged' : ''}`}
                   aria-pressed={selected}
-                  onClick={(e) => {
+                  onClick={() => {
                     if (periodEditMode) {
-                      // Pointer taps are handled by onPointerDown; this branch
-                      // only runs for keyboard activation (detail === 0).
-                      if (e.detail !== 0) return;
                       if (future) return;
-                      startPeriodDragSelection(key);
-                      endPeriodDragSelection();
+                      togglePeriodDay(key);
                       return;
                     }
                     setSelectedKey((prev) => prev === key ? null : key);
-                  }}
-                  onPointerDown={(e) => {
-                    if (!periodEditMode || future) return;
-                    e.preventDefault();
-                    // Touch pointers get implicit pointer capture, which
-                    // blocks hit-testing on sibling day cells during drag.
-                    e.currentTarget.releasePointerCapture?.(e.pointerId);
-                    startPeriodDragSelection(key);
                   }}
                   style={{
                     height: '52px',
@@ -290,10 +271,6 @@ export function CalendarScreen() {
   const [periodEditKeys, setPeriodEditKeys] = useState<Set<string>>(new Set());
   const [periodEditStatus, setPeriodEditStatus] = useState('');
   
-  const isDraggingPeriodSelectionRef = useRef(false);
-  const dragSelectionValueRef = useRef(true);
-  const draggedKeysRef = useRef<Set<string>>(new Set());
-
   const buildLogWithPeriod = useCallback((key: string, isPeriod: boolean): DayLog => {
     const existing = logs[key];
     return {
@@ -318,57 +295,13 @@ export function CalendarScreen() {
     log.intimacyNotes?.trim()
   ), []);
 
-  const setPeriodDaySelection = useCallback((key: string, shouldSelect: boolean) => {
+  const togglePeriodDay = useCallback((key: string) => {
     setPeriodEditKeys((prev) => {
-      if (prev.has(key) === shouldSelect) return prev;
       const next = new Set(prev);
-      if (shouldSelect) next.add(key); else next.delete(key);
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
   }, []);
-
-  const applyDragSelectionToKey = useCallback((key: string) => {
-    if (!isDraggingPeriodSelectionRef.current) return;
-    if (draggedKeysRef.current.has(key)) return;
-    draggedKeysRef.current.add(key);
-    setPeriodDaySelection(key, dragSelectionValueRef.current);
-  }, [setPeriodDaySelection]);
-
-  const startPeriodDragSelection = useCallback((key: string) => {
-    dragSelectionValueRef.current = !periodEditKeys.has(key);
-    draggedKeysRef.current = new Set();
-    isDraggingPeriodSelectionRef.current = true;
-    applyDragSelectionToKey(key);
-  }, [applyDragSelectionToKey, periodEditKeys]);
-
-  const endPeriodDragSelection = useCallback(() => {
-    isDraggingPeriodSelectionRef.current = false;
-    draggedKeysRef.current = new Set();
-  }, []);
-
-  useEffect(() => {
-    const handlePointerUp = () => endPeriodDragSelection();
-    const handlePointerMove = (e: PointerEvent) => {
-      if (!isDraggingPeriodSelectionRef.current) return;
-      // elementFromPoint works reliably on touch (where pointerenter on
-      // siblings doesn't fire due to implicit capture semantics).
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      if (!el) return;
-      const dayEl = (el as Element).closest?.('[data-day-key]') as HTMLElement | null;
-      if (!dayEl) return;
-      if (dayEl.dataset.dayFuture === 'true') return;
-      const key = dayEl.dataset.dayKey;
-      if (key) applyDragSelectionToKey(key);
-    };
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
-    window.addEventListener('pointermove', handlePointerMove);
-    return () => {
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
-      window.removeEventListener('pointermove', handlePointerMove);
-    };
-  }, [endPeriodDragSelection, applyDragSelectionToKey]);
 
   const applyPeriodSelection = () => {
     if (!periodEditKeys.size) return;
@@ -529,8 +462,6 @@ export function CalendarScreen() {
           flex: 1, 
           overflow: 'hidden', 
           background: '#ffffff',
-           // Disable touch action ONLY in edit mode to prevent scrolling while dragging
-          touchAction: periodEditMode ? 'none' : 'auto' 
         }}
       >
         <Virtuoso
@@ -553,9 +484,7 @@ export function CalendarScreen() {
                   selectedKey={selectedKey}
                   setSelectedKey={setSelectedKey}
                   intimacyFilterOn={intimacyFilterOn}
-                  applyDragSelectionToKey={applyDragSelectionToKey}
-                  startPeriodDragSelection={startPeriodDragSelection}
-                  endPeriodDragSelection={endPeriodDragSelection}
+                  togglePeriodDay={togglePeriodDay}
                 />
               </div>
             );
@@ -645,7 +574,7 @@ export function CalendarScreen() {
           <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderLeft: '4px solid #F472B6', borderRadius: '8px', padding: '10px 14px', display: 'flex', gap: '10px', alignItems: 'center' }}>
             <Edit3 size={16} color="#94A3B8" />
             <p style={{ margin: 0, fontSize: '11px', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
-              Tap or drag across past days to select them,<br/>then hit Mark or Clear.
+              Tap past days to select them,<br/>then hit Mark or Clear.
             </p>
           </div>
           {periodEditStatus && (
