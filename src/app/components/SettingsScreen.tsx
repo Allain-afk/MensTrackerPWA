@@ -119,9 +119,15 @@ export function SettingsScreen() {
   };
 
   const handleHelp = () => {
-    const message = `Need help?\n\n${APP_COPY.settingsHelpSteps
+    const steps = APP_COPY.settingsHelpSteps
       .map((step, i) => `${i + 1}. ${step}`)
-      .join('\n')}\n\nSupport: ${APP_COPY.supportEmail}`;
+      .join('\n');
+    const emailSubject = encodeURIComponent(`${APP_COPY.appName} Support`);
+    const emailBody = encodeURIComponent(
+      `Hi ${APP_COPY.appName} support,\n\nI have a question/suggestion:\n\n`
+    );
+    window.location.href = `mailto:${APP_COPY.supportEmail}?subject=${emailSubject}&body=${emailBody}`;
+    const message = `Need help?\n\n${steps}\n\nSupport: ${APP_COPY.supportEmail}`;
     setStatusMessage('Help opened.');
     window.alert(message);
   };

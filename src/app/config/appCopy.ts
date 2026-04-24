@@ -1,7 +1,7 @@
 export const APP_COPY = {
   appName: 'MensTracker',
   appTagline: 'Your body, your rhythm',
-  supportEmail: 'allainralphlegaspi@gmail.com',
+  supportEmail: 'support@allainafk.dev',
   onboardingBadge: 'WELCOME',
   onboardingIntro:
     'This helps us personalize your experience and make {appName} feel like home. 💜',
