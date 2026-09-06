@@ -167,7 +167,7 @@ export function PwaInstallGuide() {
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
-        padding: '16px 14px calc(84px + env(safe-area-inset-bottom, 0px))',
+        padding: '16px 14px calc(64px + max(env(safe-area-inset-bottom, 0px), 8px))',
         fontFamily: "'Nunito', sans-serif",
       }}
     >

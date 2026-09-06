@@ -897,7 +897,7 @@ export function CalendarScreen() {
         <div
           className="animate-slide-up"
           style={{
-            padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
+            padding: '12px 16px',
             background: '#FFFFFF',
             borderTop: '1px solid #F3E8FF',
             display: 'flex',

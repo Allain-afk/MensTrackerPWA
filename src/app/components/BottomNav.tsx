@@ -25,14 +25,13 @@ export function BottomNav() {
       aria-label="Primary"
       style={{
         position: 'relative',
-        minHeight: '76px',
         background: '#ffffff',
         borderTop: '1px solid #F3E8FF',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-        paddingTop: '8px',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
+        paddingTop: '6px',
         flexShrink: 0,
         boxShadow: '0 -4px 20px rgba(168, 85, 247, 0.08)',
       }}
@@ -43,7 +42,7 @@ export function BottomNav() {
           className="tab-indicator-transition"
           style={{
             position: 'absolute',
-            top: '16px', // 8px padding + 8px button padding
+            top: '8px', // 6px nav padding + 2px button padding
             // Calculate left position: center of the button minus half the pill width
             // Button takes up 1 / navItems.length width
             left: `calc(${(activeIndex + 0.5) * (100 / navItems.length)}% - 20px)`,
@@ -72,8 +71,8 @@ export function BottomNav() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '4px',
-              padding: '8px 4px',
+              gap: '3px',
+              padding: '2px 4px',
               border: 'none',
               background: 'transparent',
               cursor: 'pointer',
