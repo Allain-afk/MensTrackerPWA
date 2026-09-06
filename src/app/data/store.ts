@@ -132,42 +132,40 @@ async function withTransaction<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
-async function columnExists(table: string, column: string): Promise<boolean> {
-  // sqlocal template tag only supports bound values; PRAGMA table_info is via identifier in SQL text.
-  const rows = (await sql`SELECT 1 AS one FROM pragma_table_info(${table}) WHERE name = ${column}`) as SqlRow[];
-  return rows.length > 0;
+async function ensureColumn(table: string, column: string): Promise<void> {
+  try {
+    if (table === 'user_profile' && column === 'updated_at') {
+      await sql`ALTER TABLE user_profile ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+    } else if (table === 'cycle_settings' && column === 'updated_at') {
+      await sql`ALTER TABLE cycle_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+    } else if (table === 'notification_settings' && column === 'updated_at') {
+      await sql`ALTER TABLE notification_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+    } else if (table === 'app_preferences' && column === 'updated_at') {
+      await sql`ALTER TABLE app_preferences ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
+    } else if (table === 'day_logs' && column === 'medications_json') {
+      await sql`ALTER TABLE day_logs ADD COLUMN medications_json TEXT NOT NULL DEFAULT '[]'`;
+    } else if (table === 'day_logs' && column === 'tags_json') {
+      await sql`ALTER TABLE day_logs ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'`;
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('duplicate column') || msg.includes('already exists')) {
+      return;
+    }
+    console.warn(`[DB Migration] Notice on adding column ${column} to ${table}:`, msg);
+  }
 }
 
 async function runMigrations(): Promise<void> {
-  const metaRows = (await sql`SELECT value FROM app_meta WHERE key = 'schema_version'`) as SqlRow[];
-  const currentVersion = metaRows.length ? parseInt(asString(metaRows[0].value), 10) || 0 : 0;
+  // Unconditionally ensure that all singleton tables have the updated_at column
+  await ensureColumn('user_profile', 'updated_at');
+  await ensureColumn('cycle_settings', 'updated_at');
+  await ensureColumn('notification_settings', 'updated_at');
+  await ensureColumn('app_preferences', 'updated_at');
 
-  if (currentVersion < 2) {
-    // Add updated_at to singleton tables (safe if already present).
-    const singletonColumns: Array<[string, string]> = [
-      ['user_profile', 'updated_at'],
-      ['cycle_settings', 'updated_at'],
-      ['notification_settings', 'updated_at'],
-      ['app_preferences', 'updated_at'],
-    ];
-    for (const [table, column] of singletonColumns) {
-      if (!(await columnExists(table, column))) {
-        if (table === 'user_profile') await sql`ALTER TABLE user_profile ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
-        else if (table === 'cycle_settings') await sql`ALTER TABLE cycle_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
-        else if (table === 'notification_settings') await sql`ALTER TABLE notification_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
-        else if (table === 'app_preferences') await sql`ALTER TABLE app_preferences ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
-      }
-    }
-  }
-
-  if (currentVersion < 3) {
-    if (!(await columnExists('day_logs', 'medications_json'))) {
-      await sql`ALTER TABLE day_logs ADD COLUMN medications_json TEXT NOT NULL DEFAULT '[]'`;
-    }
-    if (!(await columnExists('day_logs', 'tags_json'))) {
-      await sql`ALTER TABLE day_logs ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'`;
-    }
-  }
+  // Unconditionally ensure that day_logs has medications_json and tags_json
+  await ensureColumn('day_logs', 'medications_json');
+  await ensureColumn('day_logs', 'tags_json');
 }
 
 async function initializeInternal(): Promise<void> {
@@ -180,7 +178,8 @@ async function initializeInternal(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS user_profile (
       id INTEGER PRIMARY KEY CHECK (id = 1),
-      name TEXT NOT NULL DEFAULT ''
+      name TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL DEFAULT ''
     )
   `;
   await sql`
@@ -189,7 +188,8 @@ async function initializeInternal(): Promise<void> {
       cycle_length INTEGER NOT NULL DEFAULT 28,
       period_length INTEGER NOT NULL DEFAULT 5,
       use_adaptive_predictions INTEGER NOT NULL DEFAULT 1,
-      perimenopause_mode INTEGER NOT NULL DEFAULT 0
+      perimenopause_mode INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT ''
     )
   `;
   await sql`
@@ -198,7 +198,8 @@ async function initializeInternal(): Promise<void> {
       period_reminder INTEGER NOT NULL DEFAULT 1,
       fertile_window INTEGER NOT NULL DEFAULT 1,
       daily_log INTEGER NOT NULL DEFAULT 0,
-      insights INTEGER NOT NULL DEFAULT 1
+      insights INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL DEFAULT ''
     )
   `;
   await sql`
@@ -207,7 +208,8 @@ async function initializeInternal(): Promise<void> {
       app_lock_enabled INTEGER NOT NULL DEFAULT 0,
       notification_permission TEXT NOT NULL DEFAULT '',
       permissions_prompted INTEGER NOT NULL DEFAULT 0,
-      calendar_swipe_hint INTEGER NOT NULL DEFAULT 0
+      calendar_swipe_hint INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT ''
     )
   `;
   await sql`
@@ -640,6 +642,7 @@ export async function resetAllData(): Promise<void> {
 
   await withTransaction(async () => {
     await sql`DELETE FROM day_logs`;
+    await sql`DELETE FROM deleted_day_logs`;
     await saveUserName('');
     await saveCycleSettings(DEFAULT_CYCLE_SETTINGS);
     await saveNotificationSettings(DEFAULT_NOTIFICATION_SETTINGS);

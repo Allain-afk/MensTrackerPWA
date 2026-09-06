@@ -25,6 +25,7 @@ import { CloudSyncSection } from './CloudSyncSection';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { HelpSupportModal } from './HelpSupportModal';
 import { WhatsNewModal } from './WhatsNewModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CURRENT_APP_VERSION } from '../config/whatsNew';
 import {
   WEB_NOTIFICATION_SUPPORT_MESSAGE,
@@ -96,6 +97,8 @@ export function SettingsScreen() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSaveName = () => {
     const trimmed = nameInput.trim();
@@ -120,20 +123,24 @@ export function SettingsScreen() {
     setShowHelpModal(true);
   };
 
-  const handleDeleteAllData = async () => {
-    const confirmed = window.confirm(
-      'Delete all local data? This removes your name, logs, cycle settings, and notification preferences. This cannot be undone.'
-    );
-    if (!confirmed) return;
+  const handleDeleteAllData = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmAndResetAllData = async () => {
     try {
+      setIsDeleting(true);
       await resetAllData();
       await reload();
       setStatusMessage('All data deleted. Restarting app...');
+      setShowDeleteConfirm(false);
       window.location.reload();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not delete local data.';
       setStatusMessage(message);
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -849,6 +856,14 @@ export function SettingsScreen() {
       <WhatsNewModal
         isOpen={showWhatsNew}
         onClose={() => setShowWhatsNew(false)}
+      />
+
+      {/* Confirm Delete All Data Modal */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmAndResetAllData}
+        isBusy={isDeleting}
       />
     </div>
   );
