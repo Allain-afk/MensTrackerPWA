@@ -111,10 +111,10 @@ export function WellnessScreen() {
   const activeStyle = PHASE_FILTERS.find((f) => f.value === activeFilter) ?? PHASE_FILTERS[0];
 
   return (
-    <div style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+    <div className="ios-scroll-view" style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column' }}>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: '8px 20px 20px', flexShrink: 0 }}>
+      <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 20px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <BookOpen size={22} color="#8B5CF6" strokeWidth={2.5} />
           <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a2e', margin: 0 }}>Wellness Library</h1>

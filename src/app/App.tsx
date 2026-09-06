@@ -49,7 +49,7 @@ function PhoneShell({ children }: { children: ReactNode }) {
             zIndex: 200,
           }}
         />
-        <div style={{ height: '100%' }}>{children}</div>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>{children}</div>
       </div>
     </div>
   );

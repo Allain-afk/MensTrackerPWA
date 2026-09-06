@@ -212,7 +212,7 @@ export function LogScreen() {
   return (
     <div style={{ background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Sticky Header */}
-      <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+      <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <button
           onClick={handleBack}
           aria-label="Go back"
@@ -236,7 +236,7 @@ export function LogScreen() {
       </div>
 
       {/* Scrollable form */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 8px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="ios-scroll-view" style={{ flex: 1, padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
         {/* Period Toggle — top of form, most important */}
         <div
@@ -652,7 +652,7 @@ export function LogScreen() {
       </div>
 
       {/* Save button */}
-      <div style={{ padding: '10px 16px 14px', background: 'linear-gradient(to top, rgba(250,250,250,1) 60%, rgba(250,250,250,0))', flexShrink: 0 }}>
+      <div style={{ padding: '10px 16px calc(14px + env(safe-area-inset-bottom, 0px))', background: 'linear-gradient(to top, rgba(250,250,250,1) 60%, rgba(250,250,250,0))', flexShrink: 0 }}>
         <button
           onClick={handleSave}
           style={{

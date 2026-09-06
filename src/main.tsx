@@ -19,4 +19,9 @@ window.addEventListener('vite:preloadError', (event) => {
   window.location.reload();
 });
 
+// Prevent accidental iOS Safari pinch-zoom and gesture zooming
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
 createRoot(document.getElementById('root')!).render(<App />);

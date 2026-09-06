@@ -158,8 +158,8 @@ export function InsightsScreen() {
   // ── Empty state ────────────────────────────────────────────────────────────
   if (totalCyclesTracked === 0) {
     return (
-      <div style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-        <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: '8px 20px 20px', flexShrink: 0 }}>
+      <div className="ios-scroll-view" style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 20px', flexShrink: 0 }}>
           <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a2e', margin: 0 }}>Your Insights 📊</h1>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
@@ -197,10 +197,10 @@ export function InsightsScreen() {
 
   // ── Data state ─────────────────────────────────────────────────────────────
   return (
-    <div style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+    <div className="ios-scroll-view" style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column' }}>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: '8px 20px 18px', flexShrink: 0 }}>
+      <div style={{ background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)', padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 18px', flexShrink: 0 }}>
         <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a2e', margin: '0 0 2px' }}>Your Insights 📊</h1>
         <p style={{ margin: 0, fontSize: '13px', color: '#A855F7', fontWeight: 600 }}>
           {totalCyclesTracked} period{totalCyclesTracked !== 1 ? 's' : ''} tracked

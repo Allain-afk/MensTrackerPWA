@@ -187,12 +187,13 @@ export function SettingsScreen() {
   };
 
   return (
-    <div style={{ minHeight: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif" }}>
+    <div className="ios-scroll-view" style={{ height: '100%', background: '#FAFAFA', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div
         style={{
           background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 100%)',
-          padding: '8px 20px 20px',
+          padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 20px',
+          flexShrink: 0,
         }}
       >
         <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a2e', margin: 0 }}>

@@ -18,18 +18,18 @@ export function Layout() {
         fontFamily: "'Nunito', sans-serif",
         position: 'relative',
         overflow: 'hidden',
+        overscrollBehavior: 'none',
       }}
     >
       {/* Main Content */}
       <main
         style={{
           flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          scrollbarWidth: 'none',
-          paddingBottom: isLogScreen
-            ? 'calc(100px + env(safe-area-inset-bottom, 0px))'
-            : 'env(safe-area-inset-bottom, 0px)',
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          position: 'relative',
         }}
       >
         <Outlet />
@@ -39,7 +39,7 @@ export function Layout() {
       <PwaInstallGuide />
 
       {/* Bottom Navigation */}
-      <BottomNav />
+      {!isLogScreen && <BottomNav />}
     </div>
   );
 }

@@ -350,7 +350,7 @@ export function CalendarScreen() {
       {/* ── Header ───────────────────────────────────────────────────── */}
       <div style={{
         background: 'linear-gradient(160deg, #fdf2f8 0%, #f0ebff 100%)',
-        padding: '10px 20px 16px',
+        padding: 'calc(10px + env(safe-area-inset-top, 0px)) 20px 16px',
         flexShrink: 0,
         borderBottom: '1px solid rgba(233,213,255,0.5)',
         zIndex: 10,

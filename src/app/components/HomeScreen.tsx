@@ -131,12 +131,12 @@ export function HomeScreen() {
     : '—';
 
   return (
-    <div style={{ height: '100%', background: '#F8F4FF', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+    <div className="ios-scroll-view" style={{ height: '100%', background: '#F8F4FF', fontFamily: "'Nunito', sans-serif", display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
         background: 'linear-gradient(160deg, #fdf2f8 0%, #f5f3ff 60%, #ede9fe 100%)',
-        padding: '4px 20px 24px', position: 'relative', overflow: 'hidden', flexShrink: 0,
+        padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 24px', position: 'relative', overflow: 'hidden', flexShrink: 0,
       }}>
         {/* Decorative blobs */}
         <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '160px', height: '160px', background: 'radial-gradient(circle, rgba(244,114,182,0.2) 0%, transparent 70%)', borderRadius: '50%' }} />

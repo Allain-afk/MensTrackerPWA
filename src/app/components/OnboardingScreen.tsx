@@ -81,17 +81,17 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
       />
 
       {/* Status bar space */}
-      <div style={{ height: '44px', flexShrink: 0 }} />
+      <div style={{ height: 'calc(16px + env(safe-area-inset-top, 0px))', flexShrink: 0 }} />
 
       {/* Scrollable content */}
       <div
+        className="ios-scroll-view"
         style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          padding: '12px 28px 32px',
+          padding: '12px 28px calc(32px + env(safe-area-inset-bottom, 0px))',
           gap: '0',
-          overflowY: 'auto',
         }}
       >
         {/* Logo pill */}
