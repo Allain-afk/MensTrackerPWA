@@ -8,13 +8,14 @@ import { CycleProvider } from './context/CycleContext';
 import { SplashScreen } from './components/SplashScreen';
 import { OnboardingScreen } from './components/OnboardingScreen';
 import { NotificationSync } from './components/NotificationSync';
-import { PwaUpdateToast } from './components/PwaUpdateToast';
 import { RouteLoader } from './components/RouteStateScreens';
+import { PwaUpdateToast } from './components/PwaUpdateToast';
 import { CloudSyncAnnouncement } from './components/CloudSyncAnnouncement';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AuthProvider } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
+import { PwaUpdateProvider } from './context/PwaUpdateContext';
 
 type Phase = 'splash' | 'onboarding' | 'app';
 
@@ -92,22 +93,24 @@ function AppFlow() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <AppDataProvider>
-          <SyncProvider>
-            <UserProvider>
-              <CycleProvider>
-                <NotificationSync />
-                <PwaUpdateToast />
-                <CloudSyncAnnouncement />
-                <OfflineBanner />
-                <AppFlow />
-                <Toaster position="top-center" />
-              </CycleProvider>
-            </UserProvider>
-          </SyncProvider>
-        </AppDataProvider>
-      </AuthProvider>
+      <PwaUpdateProvider>
+        <AuthProvider>
+          <AppDataProvider>
+            <SyncProvider>
+              <UserProvider>
+                <CycleProvider>
+                  <NotificationSync />
+                  <PwaUpdateToast />
+                  <CloudSyncAnnouncement />
+                  <OfflineBanner />
+                  <AppFlow />
+                  <Toaster position="top-center" />
+                </CycleProvider>
+              </UserProvider>
+            </SyncProvider>
+          </AppDataProvider>
+        </AuthProvider>
+      </PwaUpdateProvider>
     </ErrorBoundary>
   );
 }

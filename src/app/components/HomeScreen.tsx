@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, Droplets, Flower2, Moon } from 'lucide-react';
+import { Sparkles, Droplets, Flower2, Moon } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useCycle, dateToKey, getDaysBetween } from '../context/CycleContext';
+import { usePwaUpdate } from '../context/PwaUpdateContext';
+import { PwaUpdateModal } from './PwaUpdateModal';
 import { APP_COPY, withAppName } from '../config/appCopy';
 import { analyzeCyclePatterns } from '../utils/cycleAnalytics';
 
@@ -83,6 +85,35 @@ export function HomeScreen() {
     () => analyzeCyclePatterns(logs, periodStarts, settings.cycleLength),
     [logs, periodStarts, settings.cycleLength]
   );
+
+  const {
+    needRefresh,
+    updateServiceWorker,
+    checkForUpdate,
+  } = usePwaUpdate();
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<'checking' | 'available' | 'up-to-date'>('checking');
+
+  const handleCheckUpdate = async () => {
+    if (needRefresh) {
+      setUpdateStatus('available');
+      setShowUpdateModal(true);
+      return;
+    }
+
+    setUpdateStatus('checking');
+    setShowUpdateModal(true);
+
+    const foundUpdate = await checkForUpdate();
+    setTimeout(() => {
+      if (foundUpdate || needRefresh) {
+        setUpdateStatus('available');
+      } else {
+        setUpdateStatus('up-to-date');
+      }
+    }, 700);
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -330,13 +361,40 @@ export function HomeScreen() {
             <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a2e', margin: 0, lineHeight: 1.2 }}>{firstName}</h1>
           </div>
           <button
-            onClick={() => navigate('/settings')}
-            aria-label={hasData ? 'Open settings' : 'Open settings (setup needed)'}
-            style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.8)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', backdropFilter: 'blur(8px)', position: 'relative' }}
+            className="tap-active"
+            onClick={handleCheckUpdate}
+            aria-label={needRefresh ? 'New update available - Click to install' : 'Check for app updates'}
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '14px',
+              background: needRefresh ? 'linear-gradient(135deg, #FCE7F3, #EDE9FE)' : 'rgba(255,255,255,0.85)',
+              border: needRefresh ? '1.5px solid #F472B6' : '1px solid rgba(233,213,255,0.6)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: needRefresh ? '0 4px 14px rgba(236,72,153,0.25)' : '0 2px 8px rgba(0,0,0,0.06)',
+              backdropFilter: 'blur(8px)',
+              position: 'relative',
+              transition: 'all 0.2s ease',
+            }}
           >
-            <Bell size={20} color="#6D28D9" strokeWidth={2} aria-hidden="true" />
-            {!hasData && (
-              <div style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#EC4899', borderRadius: '50%', border: '2px solid white' }} />
+            <Sparkles size={20} color={needRefresh ? '#BE185D' : '#6D28D9'} strokeWidth={2.2} aria-hidden="true" />
+            {needRefresh && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: '6px',
+                  width: '8px',
+                  height: '8px',
+                  background: '#EC4899',
+                  borderRadius: '50%',
+                  border: '2px solid white',
+                  boxShadow: '0 0 8px rgba(236,72,153,0.8)',
+                }}
+              />
             )}
           </button>
         </div>
@@ -691,6 +749,20 @@ export function HomeScreen() {
           ))}
         </div>
       </div>
+
+      {/* PWA Update Modal */}
+      <PwaUpdateModal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+        status={updateStatus}
+        onReload={() => {
+          setShowUpdateModal(false);
+          void updateServiceWorker(true);
+        }}
+        onCheckAgain={() => {
+          void handleCheckUpdate();
+        }}
+      />
     </div>
   );
 }
