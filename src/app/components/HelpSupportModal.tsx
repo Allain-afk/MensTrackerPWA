@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, HelpCircle, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 import { APP_COPY } from '../config/appCopy';
 
@@ -60,19 +61,21 @@ export function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
     window.location.href = `mailto:${APP_COPY.supportEmail}?subject=${subject}&body=${body}`;
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
-        background: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(6px)',
+        zIndex: 99999,
+        background: 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '16px',
-        overflowY: 'auto',
+        padding: 'calc(10px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px))',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
         fontFamily: "'Nunito', sans-serif",
       }}
     >
@@ -80,13 +83,14 @@ export function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
         style={{
           width: '100%',
           maxWidth: '560px',
+          maxHeight: '100%',
           background: '#ffffff',
           borderRadius: '24px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: '88vh',
           overflow: 'hidden',
+          boxSizing: 'border-box',
         }}
       >
         {/* Header */}
@@ -98,6 +102,7 @@ export function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
             alignItems: 'center',
             justifyContent: 'space-between',
             background: 'linear-gradient(135deg, #F0F9FF 0%, #F5F3FF 100%)',
+            flexShrink: 0,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -145,7 +150,7 @@ export function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
         </div>
 
         {/* Scrollable Body */}
-        <div style={{ padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ padding: '20px 24px', flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Direct Support Card */}
           <div
             style={{
@@ -253,7 +258,7 @@ export function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '12px 24px', borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'flex-end', background: '#FAFAFA' }}>
+        <div style={{ padding: '12px 24px', borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'flex-end', background: '#FAFAFA', flexShrink: 0 }}>
           <button
             onClick={onClose}
             style={{
@@ -272,6 +277,7 @@ export function HelpSupportModal({ isOpen, onClose }: HelpSupportModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

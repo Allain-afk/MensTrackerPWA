@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { X, Printer, FileText, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useCycle, keyToDate } from '../context/CycleContext';
 import { useUser } from '../context/UserContext';
@@ -23,11 +24,7 @@ export function DoctorReportModal({ isOpen, onClose }: DoctorReportModalProps) {
     .sort((a, b) => b.date.getTime() - a.date.getTime()); // newest first
 
   const cycleRows = sortedStarts.map((item, idx) => {
-    // Next start is the preceding chronological one (which is idx - 1 in descending list)
     let cycleLengthDays: number | null = null;
-    if (idx > 0) {
-      // the one before this in time is idx + 1
-    }
     const prevInTime = sortedStarts[idx + 1];
     if (prevInTime) {
       cycleLengthDays = Math.round(
@@ -97,44 +94,72 @@ export function DoctorReportModal({ isOpen, onClose }: DoctorReportModalProps) {
     window.print();
   };
 
-  return (
+  return createPortal(
     <div
+      className="doctor-report-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(4px)',
+        zIndex: 99999,
+        background: 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
         alignItems: 'center',
-        padding: '16px',
-        overflowY: 'auto',
+        padding: 'calc(10px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px))',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
       <style>{`
         @media print {
-          body * {
-            visibility: hidden !important;
-          }
-          #printable-doctor-report, #printable-doctor-report * {
-            visibility: visible !important;
-          }
-          #printable-doctor-report {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+          /* Reset overlay styling during print */
+          .doctor-report-backdrop {
+            position: static !important;
+            inset: auto !important;
             width: 100% !important;
-            max-width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            background: #ffffff !important;
+            backdrop-filter: none !important;
+            padding: 0 !important;
             margin: 0 !important;
-            padding: 20px !important;
-            box-shadow: none !important;
-            border: none !important;
-            background: white !important;
+            overflow: visible !important;
+            display: block !important;
+            z-index: auto !important;
           }
+
           .no-print {
             display: none !important;
+          }
+
+          #printable-doctor-report {
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 10px 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: #ffffff !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+
+          .print-avoid-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          table {
+            page-break-inside: auto;
+          }
+
+          tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
@@ -204,14 +229,16 @@ export function DoctorReportModal({ isOpen, onClose }: DoctorReportModalProps) {
         style={{
           width: '100%',
           maxWidth: '740px',
+          flex: 1,
+          minHeight: 0,
           background: '#ffffff',
           borderRadius: '20px',
-          padding: '32px',
+          padding: '28px 20px',
           color: '#1E293B',
           fontFamily: "'Nunito', system-ui, -apple-system, sans-serif",
           boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-          maxHeight: '88vh',
           overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
           boxSizing: 'border-box',
         }}
       >
@@ -416,6 +443,7 @@ export function DoctorReportModal({ isOpen, onClose }: DoctorReportModalProps) {
           <span>Confidential Medical Information</span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -64,3 +64,24 @@ button, a, input, select, textarea, [role="button"] {
 .ios-safe-bottom {
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
 }
+
+/* Print mode overrides: restore normal document flow for AirPrint and PDF export on iOS & Mobile */
+@media print {
+  html, body {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #root {
+    display: none !important;
+  }
+}
+
