@@ -115,7 +115,6 @@ function mapLegacyBackupToSnapshot(payload: LegacyPlainBackupPayload): AppDataSn
     cycleSettings: cycleSettings as AppDataSnapshot['cycleSettings'],
     notificationSettings: notificationSettings as AppDataSnapshot['notificationSettings'],
     preferences: {
-      appLockEnabled: payload.data.bloomcycle_app_lock === 'true',
       notificationPermission: payload.data.bloomcycle_notification_permission ?? '',
       permissionsPrompted: payload.data.bloomcycle_permissions_prompted === 'true',
       calendarSwipeHint: false,

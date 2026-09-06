@@ -1,13 +1,16 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Cell, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
+import { FileText, Printer } from 'lucide-react';
 import {
   useCycle, getPeriodLength, getDaysBetween,
 } from '../context/CycleContext';
 import { APP_COPY } from '../config/appCopy';
+import { DoctorReportModal } from './DoctorReportModal';
+import { analyzeCyclePatterns } from '../utils/cycleAnalytics';
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -28,6 +31,7 @@ const CustomTip = ({ active, payload, label }: any) => {
 
 export function InsightsScreen() {
   const navigate = useNavigate();
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
   const {
     logs,
     periodStarts,
@@ -46,6 +50,11 @@ export function InsightsScreen() {
     predictedPeriodRangeEnd,
     settings,
   } = useCycle();
+
+  const cycleAnalysis = useMemo(
+    () => analyzeCyclePatterns(logs, periodStarts, settings.cycleLength),
+    [logs, periodStarts, settings.cycleLength]
+  );
 
   // ── Compute cycle history ──────────────────────────────────────────────────
   const { cycleLengths, periodLengths } = useMemo(() => {
@@ -93,12 +102,10 @@ export function InsightsScreen() {
 
   // Regularity: standard deviation of cycle lengths
   let regularityPct = 0;
-  let regularityLabel = 'Regular';
   if (hasCycleData && avgCycleLen !== null && cycleLengths.length >= 2) {
     const variance = cycleLengths.reduce((s, c) => s + Math.pow(c.length - avgCycleLen, 2), 0) / cycleLengths.length;
     const stdDev = Math.sqrt(variance);
     regularityPct = Math.max(0, Math.min(100, Math.round(100 - stdDev * 10)));
-    regularityLabel = stdDev <= 2 ? 'Very Regular' : stdDev <= 4 ? 'Regular' : stdDev <= 6 ? 'Irregular' : 'Variable';
   } else if (hasCycleData) {
     regularityPct = 100;
   }
@@ -209,6 +216,74 @@ export function InsightsScreen() {
       </div>
 
       <div style={{ padding: '14px 16px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        {/* Doctor & Clinical Health Report Banner */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #EFF6FF 0%, #EDE9FE 100%)',
+            borderRadius: '20px',
+            padding: '16px',
+            border: '1.5px solid #DDD6FE',
+            boxShadow: '0 4px 14px rgba(139, 92, 246, 0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(109, 40, 217, 0.25)',
+                }}
+              >
+                <FileText size={19} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1E293B' }}>
+                  Doctor's Clinical Report
+                </h3>
+                <p style={{ margin: 0, fontSize: '11px', color: '#6D28D9', fontWeight: 700 }}>
+                  Gynecologist-ready PDF & Printout
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowDoctorModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                borderRadius: '999px',
+                border: 'none',
+                background: '#8B5CF6',
+                color: 'white',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 3px 10px rgba(139, 92, 246, 0.35)',
+                fontFamily: "'Nunito', sans-serif",
+                flexShrink: 0,
+              }}
+            >
+              <Printer size={13} />
+              <span>Export PDF</span>
+            </button>
+          </div>
+          <p style={{ margin: 0, fontSize: '12px', color: '#475569', fontWeight: 600, lineHeight: 1.45 }}>
+            Generate a clean, printable 1-page health summary of your cycle regularity, bleeding patterns, and top symptoms for your next medical checkup.
+          </p>
+        </div>
 
         {/* Cycle Length Chart — only if ≥ 2 period starts */}
         {cycleLengths.length >= 1 ? (
@@ -407,11 +482,16 @@ export function InsightsScreen() {
 
         {/* Regularity */}
         {cycleLengths.length >= 2 && (
-          <div style={{ background: '#ffffff', borderRadius: '20px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #F3F4F6', marginBottom: '6px' }}>
+          <div style={{ background: '#ffffff', borderRadius: '20px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #F3F4F6' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1F2937' }}>Cycle Regularity</h3>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1F2937' }}>Cycle Regularity</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9CA3AF', fontWeight: 600 }}>
+                  Variation: ±{cycleAnalysis.regularity.cycleLengthVariation} days across cycles
+                </p>
+              </div>
               <span style={{ fontSize: '13px', fontWeight: 800, color: regularityPct >= 75 ? '#059669' : '#F59E0B' }}>
-                {regularityLabel} {regularityPct >= 75 ? '✓' : '~'}
+                {cycleAnalysis.regularity.regularityLabel} {regularityPct >= 75 ? '✓' : '~'}
               </span>
             </div>
             <div style={{ height: '10px', background: '#F3F4F6', borderRadius: '999px', overflow: 'hidden' }}>
@@ -419,8 +499,44 @@ export function InsightsScreen() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
               <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 600 }}>Irregular</span>
-              <span style={{ fontSize: '11px', color: '#8B5CF6', fontWeight: 700 }}>{regularityPct}% — {regularityLabel}</span>
+              <span style={{ fontSize: '11px', color: '#8B5CF6', fontWeight: 700 }}>{regularityPct}% — {cycleAnalysis.regularity.regularityLabel}</span>
               <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 600 }}>Consistent</span>
+            </div>
+          </div>
+        )}
+
+        {/* Recurring Premenstrual Patterns (PMS) */}
+        {cycleAnalysis.pmsPatterns.length > 0 && (
+          <div style={{ background: '#ffffff', borderRadius: '20px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1F2937' }}>
+                  Recurring Cycle Patterns (PMS)
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9CA3AF', fontWeight: 600 }}>
+                  Logged in premenstrual window (5d before period)
+                </p>
+              </div>
+              <span style={{ fontSize: '18px' }}>🔮</span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {cycleAnalysis.pmsPatterns.map((pattern, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FAF5FF', border: '1px solid #E9D5FF', borderRadius: '12px', padding: '8px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>{pattern.category === 'mood' ? '🌸' : '⚡'}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#6B21A8' }}>{pattern.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '60px', height: '6px', background: '#EDE9FE', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pattern.frequencyPercent}%`, height: '100%', background: '#A855F7', borderRadius: '999px' }} />
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#7C3AED', minWidth: '32px', textAlign: 'right' }}>
+                      {pattern.frequencyPercent}%
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -498,6 +614,12 @@ export function InsightsScreen() {
         )}
 
       </div>
+
+      {/* Doctor Clinical Health Summary Modal */}
+      <DoctorReportModal
+        isOpen={showDoctorModal}
+        onClose={() => setShowDoctorModal(false)}
+      />
     </div>
   );
 }

@@ -98,6 +98,30 @@ const protectionOptions: { value: Exclude<ProtectionType, null>; label: string }
   { value: 'Other', label: 'Other' },
 ];
 
+const medicationPresets: { name: string; icon: string }[] = [
+  { name: 'Ibuprofen', icon: '💊' },
+  { name: 'Paracetamol', icon: '💊' },
+  { name: 'Naproxen', icon: '💊' },
+  { name: 'Birth Control Pill', icon: '🌸' },
+  { name: 'Magnesium', icon: '✨' },
+  { name: 'Iron / Multivitamin', icon: '🩸' },
+  { name: 'Antihistamine', icon: '🌿' },
+  { name: 'Heating Pad', icon: '🔥' },
+];
+
+const lifestylePresets: { name: string; icon: string }[] = [
+  { name: 'High Stress', icon: '⚡' },
+  { name: 'Intense Workout', icon: '🏃‍♀️' },
+  { name: 'Rest Day', icon: '🛋️' },
+  { name: 'Travel', icon: '✈️' },
+  { name: 'Alcohol', icon: '🍷' },
+  { name: 'Caffeine', icon: '☕' },
+  { name: 'Salty Cravings', icon: '🍟' },
+  { name: 'Sweet Cravings', icon: '🍫' },
+  { name: 'Meditation / Yoga', icon: '🧘‍♀️' },
+  { name: 'Late Night', icon: '🌙' },
+];
+
 export function LogScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -134,6 +158,12 @@ export function LogScreen() {
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel | null>(existing?.energyLevel ?? null);
   const [waterGlasses, setWaterGlasses] = useState<number>(existing?.waterGlasses ?? 0);
   const [cervicalMucus, setCervicalMucus] = useState<CervicalMucus | null>(existing?.cervicalMucus ?? null);
+  const [selectedMedications, setSelectedMedications] = useState<Set<string>>(new Set(existing?.medications ?? []));
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(existing?.tags ?? []));
+  const [customMed, setCustomMed] = useState('');
+  const [showCustomMedInput, setShowCustomMedInput] = useState(false);
+  const [customTag, setCustomTag] = useState('');
+  const [showCustomTagInput, setShowCustomTagInput] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // Re-sync when dateKey changes (e.g., navigating from calendar)
@@ -151,6 +181,10 @@ export function LogScreen() {
     setEnergyLevel(ex?.energyLevel ?? null);
     setWaterGlasses(ex?.waterGlasses ?? 0);
     setCervicalMucus(ex?.cervicalMucus ?? null);
+    setSelectedMedications(new Set(ex?.medications ?? []));
+    setSelectedTags(new Set(ex?.tags ?? []));
+    setShowCustomMedInput(false);
+    setShowCustomTagInput(false);
     setSaved(false);
   }, [dateKey]);
 
@@ -164,6 +198,40 @@ export function LogScreen() {
     const next = new Set(symptoms);
     if (next.has(symptom)) next.delete(symptom); else next.add(symptom);
     setSymptoms(next);
+  };
+
+  const toggleMedication = (med: string) => {
+    const next = new Set(selectedMedications);
+    if (next.has(med)) next.delete(med); else next.add(med);
+    setSelectedMedications(next);
+  };
+
+  const addCustomMedication = () => {
+    const trimmed = customMed.trim();
+    if (trimmed) {
+      const next = new Set(selectedMedications);
+      next.add(trimmed);
+      setSelectedMedications(next);
+      setCustomMed('');
+      setShowCustomMedInput(false);
+    }
+  };
+
+  const toggleTag = (tag: string) => {
+    const next = new Set(selectedTags);
+    if (next.has(tag)) next.delete(tag); else next.add(tag);
+    setSelectedTags(next);
+  };
+
+  const addCustomTag = () => {
+    const trimmed = customTag.trim();
+    if (trimmed) {
+      const next = new Set(selectedTags);
+      next.add(trimmed);
+      setSelectedTags(next);
+      setCustomTag('');
+      setShowCustomTagInput(false);
+    }
   };
 
   const handleSave = () => {
@@ -180,6 +248,8 @@ export function LogScreen() {
       energyLevel,
       waterGlasses,
       cervicalMucus,
+      medications: Array.from(selectedMedications),
+      tags: Array.from(selectedTags),
     };
     saveLog(dateKey, log);
     setSaved(true);
@@ -535,6 +605,310 @@ export function LogScreen() {
             >
               <Plus size={16} color="#0369a1" />
             </button>
+          </div>
+        </div>
+
+        {/* Medications & Remedies */}
+        <div style={{ background: '#ffffff', borderRadius: '18px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #F3F4F6' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>💊</span>
+              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#1F2937' }}>Medications & Remedies</h3>
+            </div>
+            <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600 }}>Pain relief & supplements</span>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {medicationPresets.map((med) => {
+              const isSelected = selectedMedications.has(med.name);
+              return (
+                <button
+                  key={med.name}
+                  onClick={() => toggleMedication(med.name)}
+                  style={{
+                    padding: '7px 12px',
+                    border: `2px solid ${isSelected ? '#EC4899' : '#E5E7EB'}`,
+                    borderRadius: '999px',
+                    background: isSelected ? 'linear-gradient(135deg, #FDF2F8, #FCE7F3)' : '#F9FAFB',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: '13px' }}>{med.icon}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: isSelected ? '#BE185D' : '#6B7280' }}>
+                    {med.name}
+                  </span>
+                  {isSelected && (
+                    <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#EC4899', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check size={8} color="white" strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Any custom selected medications not in presets */}
+            {Array.from(selectedMedications)
+              .filter((name) => !medicationPresets.some((p) => p.name === name))
+              .map((customName) => (
+                <button
+                  key={customName}
+                  onClick={() => toggleMedication(customName)}
+                  style={{
+                    padding: '7px 12px',
+                    border: '2px solid #EC4899',
+                    borderRadius: '999px',
+                    background: 'linear-gradient(135deg, #FDF2F8, #FCE7F3)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: '13px' }}>💊</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#BE185D' }}>{customName}</span>
+                  <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#EC4899', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Check size={8} color="white" strokeWidth={3} />
+                  </div>
+                </button>
+              ))}
+
+            {/* Add Custom Button / Input */}
+            {!showCustomMedInput ? (
+              <button
+                onClick={() => setShowCustomMedInput(true)}
+                style={{
+                  padding: '7px 12px',
+                  border: '1.5px dashed #D1D5DB',
+                  borderRadius: '999px',
+                  background: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontFamily: "'Nunito', sans-serif",
+                }}
+              >
+                <Plus size={13} />
+                <span>Add other</span>
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', marginTop: '4px' }}>
+                <input
+                  type="text"
+                  value={customMed}
+                  onChange={(e) => setCustomMed(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomMedication();
+                    }
+                  }}
+                  placeholder="e.g. Advil, Heating Gel..."
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    padding: '6px 12px',
+                    borderRadius: '999px',
+                    border: '2px solid #EC4899',
+                    fontSize: '12px',
+                    fontFamily: "'Nunito', sans-serif",
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={addCustomMedication}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '999px',
+                    border: 'none',
+                    background: '#EC4899',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => setShowCustomMedInput(false)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '999px',
+                    border: '1px solid #E5E7EB',
+                    background: '#F9FAFB',
+                    color: '#6B7280',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Lifestyle & Factors */}
+        <div style={{ background: '#ffffff', borderRadius: '18px', padding: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #F3F4F6' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>🌿</span>
+              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#1F2937' }}>Lifestyle & Daily Factors</h3>
+            </div>
+            <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600 }}>Habits & context</span>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {lifestylePresets.map((tag) => {
+              const isSelected = selectedTags.has(tag.name);
+              return (
+                <button
+                  key={tag.name}
+                  onClick={() => toggleTag(tag.name)}
+                  style={{
+                    padding: '7px 12px',
+                    border: `2px solid ${isSelected ? '#3B82F6' : '#E5E7EB'}`,
+                    borderRadius: '999px',
+                    background: isSelected ? 'linear-gradient(135deg, #EFF6FF, #DBEAFE)' : '#F9FAFB',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: '13px' }}>{tag.icon}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: isSelected ? '#1D4ED8' : '#6B7280' }}>
+                    {tag.name}
+                  </span>
+                  {isSelected && (
+                    <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check size={8} color="white" strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Any custom selected tags not in presets */}
+            {Array.from(selectedTags)
+              .filter((name) => !lifestylePresets.some((p) => p.name === name))
+              .map((customName) => (
+                <button
+                  key={customName}
+                  onClick={() => toggleTag(customName)}
+                  style={{
+                    padding: '7px 12px',
+                    border: '2px solid #3B82F6',
+                    borderRadius: '999px',
+                    background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: '13px' }}>🏷️</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#1D4ED8' }}>{customName}</span>
+                  <div style={{ width: '13px', height: '13px', borderRadius: '50%', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Check size={8} color="white" strokeWidth={3} />
+                  </div>
+                </button>
+              ))}
+
+            {/* Add Custom Tag Button / Input */}
+            {!showCustomTagInput ? (
+              <button
+                onClick={() => setShowCustomTagInput(true)}
+                style={{
+                  padding: '7px 12px',
+                  border: '1.5px dashed #D1D5DB',
+                  borderRadius: '999px',
+                  background: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontFamily: "'Nunito', sans-serif",
+                }}
+              >
+                <Plus size={13} />
+                <span>Add other</span>
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', marginTop: '4px' }}>
+                <input
+                  type="text"
+                  value={customTag}
+                  onChange={(e) => setCustomTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addCustomTag();
+                    }
+                  }}
+                  placeholder="e.g. Fasting, Sauna..."
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    padding: '6px 12px',
+                    borderRadius: '999px',
+                    border: '2px solid #3B82F6',
+                    fontSize: '12px',
+                    fontFamily: "'Nunito', sans-serif",
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={addCustomTag}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '999px',
+                    border: 'none',
+                    background: '#3B82F6',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => setShowCustomTagInput(false)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '999px',
+                    border: '1px solid #E5E7EB',
+                    background: '#F9FAFB',
+                    color: '#6B7280',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Bell,
-  Lock,
   ChevronRight,
   Heart,
   RefreshCw,
@@ -21,8 +20,9 @@ import { useCycle } from '../context/CycleContext';
 import { resetAllData } from '../data/store';
 import { APP_COPY, withAppName } from '../config/appCopy';
 import { createEncryptedBackup, downloadBackupFile, restoreEncryptedBackup } from '../utils/offlineBackup';
-import { generateCsvExport, downloadCsvFile } from '../utils/offlineExportCsv';
 import { CloudSyncSection } from './CloudSyncSection';
+import { PrivacyPolicyModal } from './PrivacyPolicyModal';
+import { HelpSupportModal } from './HelpSupportModal';
 import {
   WEB_NOTIFICATION_SUPPORT_MESSAGE,
   type NotificationSettings,
@@ -72,7 +72,7 @@ function Toggle({ on, onToggle, color = '#8B5CF6', disabled = false }: TogglePro
 
 export function SettingsScreen() {
   const { name, setName, initials } = useUser();
-  const { snapshot, setNotificationPreferences, updatePreferences, reload } = useAppData();
+  const { snapshot, setNotificationPreferences, reload } = useAppData();
   const { settings, updateSettings, periodStarts, logs } = useCycle();
 
   const cycleLength = settings.cycleLength;
@@ -87,9 +87,11 @@ export function SettingsScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(name);
   const notifications: NotificationSettings = snapshot.notificationSettings;
-  const appLockEnabled = snapshot.preferences.appLockEnabled;
   const [statusMessage, setStatusMessage] = useState('');
   const [backupBusy, setBackupBusy] = useState(false);
+  const [showBackupGuide, setShowBackupGuide] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   const handleSaveName = () => {
     const trimmed = nameInput.trim();
@@ -107,29 +109,11 @@ export function SettingsScreen() {
   };
 
   const handlePrivacyInfo = () => {
-    const message = APP_COPY.privacyMessage;
-    setStatusMessage('Privacy details shown.');
-    window.alert(message);
-  };
-
-  const handleAppLock = () => {
-    const next = !appLockEnabled;
-    updatePreferences({ appLockEnabled: next });
-    setStatusMessage(next ? 'App Lock enabled.' : 'App Lock disabled.');
+    setShowPrivacyModal(true);
   };
 
   const handleHelp = () => {
-    const steps = APP_COPY.settingsHelpSteps
-      .map((step, i) => `${i + 1}. ${step}`)
-      .join('\n');
-    const emailSubject = encodeURIComponent(`${APP_COPY.appName} Support`);
-    const emailBody = encodeURIComponent(
-      `Hi ${APP_COPY.appName} support,\n\nI have a question/suggestion:\n\n`
-    );
-    window.location.href = `mailto:${APP_COPY.supportEmail}?subject=${emailSubject}&body=${emailBody}`;
-    const message = `Need help?\n\n${steps}\n\nSupport: ${APP_COPY.supportEmail}`;
-    setStatusMessage('Help opened.');
-    window.alert(message);
+    setShowHelpModal(true);
   };
 
   const handleDeleteAllData = async () => {
@@ -568,15 +552,70 @@ export function SettingsScreen() {
             border: '1px solid #F3F4F6',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Shield size={16} color="#4F46E5" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Shield size={16} color="#4F46E5" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1F2937' }}>Offline Backup</h3>
             </div>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1F2937' }}>Offline Backup</h3>
+            <button
+              type="button"
+              onClick={() => setShowBackupGuide((prev) => !prev)}
+              aria-label="Backup guide"
+              title="How backup works"
+              style={{
+                background: showBackupGuide ? '#EEF2FF' : 'transparent',
+                border: 'none',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: showBackupGuide ? '#4F46E5' : '#9CA3AF',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <HelpCircle size={18} />
+            </button>
           </div>
+
           <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#6B7280', fontWeight: 600, lineHeight: 1.5 }}>
             Export or restore your encrypted local data without cloud sync.
           </p>
+
+          {showBackupGuide && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%)',
+                border: '1px solid #C7D2FE',
+                borderRadius: '14px',
+                padding: '12px 14px',
+                marginBottom: '14px',
+                fontSize: '12px',
+                color: '#334155',
+                lineHeight: 1.5,
+              }}
+            >
+              <div style={{ fontWeight: 800, color: '#4338CA', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>💡</span>
+                <span>How Offline Backup Works</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div>
+                  <strong style={{ color: '#1E293B' }}>1. Export Backup:</strong> Downloads an encrypted file of your period logs, symptoms, medications, and settings directly to your device.
+                </div>
+                <div>
+                  <strong style={{ color: '#1E293B' }}>2. Import Backup:</strong> Restores all your data anytime if you switch phones, use a different browser, or reinstall the app.
+                </div>
+                <div style={{ fontSize: '11px', color: '#6366F1', fontWeight: 700, marginTop: '2px' }}>
+                  🔒 100% Private: Saved exclusively to your device storage, never sent to external servers.
+                </div>
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -630,36 +669,6 @@ export function SettingsScreen() {
                 />
               </label>
             </div>
-            <button
-              onClick={() => {
-                const count = Object.keys(logs).length;
-                if (count === 0) return;
-                try {
-                  const csv = generateCsvExport(logs);
-                  downloadCsvFile(csv);
-                  setStatusMessage(`Exported ${count} day${count === 1 ? '' : 's'} to CSV.`);
-                } catch (err) {
-                  const message = err instanceof Error ? err.message : 'CSV export failed.';
-                  setStatusMessage(message);
-                }
-              }}
-              disabled={Object.keys(logs).length === 0}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1.5px solid #A7F3D0',
-                borderRadius: '12px',
-                background: '#ECFDF5',
-                color: '#047857',
-                fontSize: '12px',
-                fontWeight: 700,
-                fontFamily: "'Nunito', sans-serif",
-                cursor: Object.keys(logs).length === 0 ? 'not-allowed' : 'pointer',
-                opacity: Object.keys(logs).length === 0 ? 0.5 : 1,
-              }}
-            >
-              📊 Export Health Report (CSV)
-            </button>
           </div>
         </div>
 
@@ -760,21 +769,14 @@ export function SettingsScreen() {
           }}
         >
           {[
-            { icon: Shield, label: 'Privacy & Security', color: '#059669', desc: 'Data protection settings' },
-            {
-              icon: Lock,
-              label: 'App Lock',
-              color: '#6D28D9',
-              desc: appLockEnabled ? 'Enabled (local toggle)' : 'Disabled (local toggle)',
-            },
-            { icon: HelpCircle, label: 'Help & Support', color: '#0EA5E9', desc: 'FAQs & contact us' },
+            { icon: Shield, label: 'Privacy & Security', color: '#059669', desc: 'Privacy policy & terms of service' },
+            { icon: HelpCircle, label: 'Help & Support', color: '#0EA5E9', desc: 'FAQs, usage tips & support' },
             { icon: Trash2, label: 'Delete All Data', color: '#EF4444', desc: 'Permanently erase your data' },
           ].map(({ icon: Icon, label, color, desc }, i, arr) => (
             <button
               key={label}
               onClick={() => {
                 if (label === 'Privacy & Security') handlePrivacyInfo();
-                if (label === 'App Lock') handleAppLock();
                 if (label === 'Help & Support') handleHelp();
                 if (label === 'Delete All Data') handleDeleteAllData();
               }}
@@ -824,6 +826,18 @@ export function SettingsScreen() {
           </p>
         </div>
       </div>
+
+      {/* Privacy Policy & Terms Modal */}
+      <PrivacyPolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
+
+      {/* Help & Support FAQs Modal */}
+      <HelpSupportModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+      />
     </div>
   );
 }

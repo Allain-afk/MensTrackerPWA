@@ -12,7 +12,7 @@ import {
   type NotificationSettings,
 } from './models';
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 const DATABASE_NAME = 'menstracker.sqlite3';
 
 const { sql } = new SQLocal(DATABASE_NAME);
@@ -73,6 +73,8 @@ function normalizeDayLog(input?: Partial<DayLog> | null): DayLog {
     energyLevel: input?.energyLevel ?? null,
     waterGlasses: typeof input?.waterGlasses === 'number' ? input.waterGlasses : 0,
     cervicalMucus: input?.cervicalMucus ?? null,
+    medications: Array.isArray(input?.medications) ? input.medications : [],
+    tags: Array.isArray(input?.tags) ? input.tags : [],
   };
 }
 
@@ -90,6 +92,8 @@ function rowToDayLog(row: SqlRow): DayLog {
     energyLevel: (row.energy_level as DayLog['energyLevel']) ?? null,
     waterGlasses: asNumber(row.water_glasses, 0),
     cervicalMucus: (row.cervical_mucus as DayLog['cervicalMucus']) ?? null,
+    medications: parseJsonArray<string>(row.medications_json),
+    tags: parseJsonArray<string>(row.tags_json),
   });
 }
 
@@ -110,6 +114,8 @@ function logToInsertable(dateKey: string, log: DayLog) {
     energyLevel: normalized.energyLevel,
     waterGlasses: normalized.waterGlasses ?? 0,
     cervicalMucus: normalized.cervicalMucus,
+    medicationsJson: JSON.stringify(normalized.medications ?? []),
+    tagsJson: JSON.stringify(normalized.tags ?? []),
   };
 }
 
@@ -151,6 +157,15 @@ async function runMigrations(): Promise<void> {
         else if (table === 'notification_settings') await sql`ALTER TABLE notification_settings ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
         else if (table === 'app_preferences') await sql`ALTER TABLE app_preferences ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`;
       }
+    }
+  }
+
+  if (currentVersion < 3) {
+    if (!(await columnExists('day_logs', 'medications_json'))) {
+      await sql`ALTER TABLE day_logs ADD COLUMN medications_json TEXT NOT NULL DEFAULT '[]'`;
+    }
+    if (!(await columnExists('day_logs', 'tags_json'))) {
+      await sql`ALTER TABLE day_logs ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'`;
     }
   }
 }
@@ -210,6 +225,8 @@ async function initializeInternal(): Promise<void> {
       energy_level TEXT,
       water_glasses INTEGER NOT NULL DEFAULT 0,
       cervical_mucus TEXT,
+      medications_json TEXT NOT NULL DEFAULT '[]',
+      tags_json TEXT NOT NULL DEFAULT '[]',
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -279,7 +296,7 @@ async function initializeInternal(): Promise<void> {
     )
     VALUES (
       1,
-      ${DEFAULT_APP_PREFERENCES.appLockEnabled ? 1 : 0},
+      0,
       ${DEFAULT_APP_PREFERENCES.notificationPermission},
       ${DEFAULT_APP_PREFERENCES.permissionsPrompted ? 1 : 0},
       ${DEFAULT_APP_PREFERENCES.calendarSwipeHint ? 1 : 0}
@@ -350,7 +367,6 @@ export async function loadAppSnapshot(): Promise<AppDataSnapshot> {
 
   if (preferencesRow) {
     snapshot.preferences = {
-      appLockEnabled: asBoolean(preferencesRow.app_lock_enabled),
       notificationPermission: asString(preferencesRow.notification_permission),
       permissionsPrompted: asBoolean(preferencesRow.permissions_prompted),
       calendarSwipeHint: asBoolean(preferencesRow.calendar_swipe_hint),
@@ -371,7 +387,9 @@ export async function loadAppSnapshot(): Promise<AppDataSnapshot> {
       sleep_quality,
       energy_level,
       water_glasses,
-      cervical_mucus
+      cervical_mucus,
+      medications_json,
+      tags_json
     FROM day_logs
     ORDER BY date_key ASC
   `) as SqlRow[];
@@ -457,20 +475,17 @@ export async function saveAppPreferences(preferences: AppPreferences): Promise<v
   await sql`
     INSERT INTO app_preferences (
       id,
-      app_lock_enabled,
       notification_permission,
       permissions_prompted,
       calendar_swipe_hint
     )
     VALUES (
       1,
-      ${preferences.appLockEnabled ? 1 : 0},
       ${preferences.notificationPermission},
       ${preferences.permissionsPrompted ? 1 : 0},
       ${preferences.calendarSwipeHint ? 1 : 0}
     )
     ON CONFLICT(id) DO UPDATE SET
-      app_lock_enabled = excluded.app_lock_enabled,
       notification_permission = excluded.notification_permission,
       permissions_prompted = excluded.permissions_prompted,
       calendar_swipe_hint = excluded.calendar_swipe_hint
@@ -496,6 +511,8 @@ export async function upsertDayLog(dateKey: string, log: DayLog, updatedAt: stri
       energy_level,
       water_glasses,
       cervical_mucus,
+      medications_json,
+      tags_json,
       updated_at
     )
     VALUES (
@@ -512,6 +529,8 @@ export async function upsertDayLog(dateKey: string, log: DayLog, updatedAt: stri
       ${next.energyLevel},
       ${next.waterGlasses},
       ${next.cervicalMucus},
+      ${next.medicationsJson},
+      ${next.tagsJson},
       ${updatedAt}
     )
     ON CONFLICT(date_key) DO UPDATE SET
@@ -527,6 +546,8 @@ export async function upsertDayLog(dateKey: string, log: DayLog, updatedAt: stri
       energy_level = excluded.energy_level,
       water_glasses = excluded.water_glasses,
       cervical_mucus = excluded.cervical_mucus,
+      medications_json = excluded.medications_json,
+      tags_json = excluded.tags_json,
       updated_at = excluded.updated_at
   `;
   // Clear any prior tombstone — the row is alive again.
@@ -668,7 +689,6 @@ export function normalizeSnapshot(input: Partial<AppDataSnapshot>): AppDataSnaps
       insights: input.notificationSettings?.insights ?? DEFAULT_NOTIFICATION_SETTINGS.insights,
     },
     preferences: {
-      appLockEnabled: input.preferences?.appLockEnabled ?? DEFAULT_APP_PREFERENCES.appLockEnabled,
       notificationPermission:
         input.preferences?.notificationPermission ?? DEFAULT_APP_PREFERENCES.notificationPermission,
       permissionsPrompted:

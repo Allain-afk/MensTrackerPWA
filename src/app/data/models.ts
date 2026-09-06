@@ -50,6 +50,8 @@ export interface DayLog {
   energyLevel?: EnergyLevel | null;
   waterGlasses?: number;
   cervicalMucus?: CervicalMucus | null;
+  medications?: string[];
+  tags?: string[];
 }
 
 export interface CycleSettings {
@@ -67,7 +69,6 @@ export interface NotificationSettings {
 }
 
 export interface AppPreferences {
-  appLockEnabled: boolean;
   notificationPermission: string;
   permissionsPrompted: boolean;
   calendarSwipeHint: boolean;
@@ -100,7 +101,6 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 };
 
 export const DEFAULT_APP_PREFERENCES: AppPreferences = {
-  appLockEnabled: false,
   notificationPermission: '',
   permissionsPrompted: false,
   calendarSwipeHint: false,
@@ -119,6 +119,8 @@ export const EMPTY_DAY_LOG: DayLog = {
   energyLevel: null,
   waterGlasses: 0,
   cervicalMucus: null,
+  medications: [],
+  tags: [],
 };
 
 export function createDefaultSnapshot(): AppDataSnapshot {

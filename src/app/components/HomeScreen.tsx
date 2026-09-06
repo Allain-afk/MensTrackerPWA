@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Bell, Droplets, Flower2, Moon } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useCycle, dateToKey, getDaysBetween } from '../context/CycleContext';
 import { APP_COPY, withAppName } from '../config/appCopy';
+import { analyzeCyclePatterns } from '../utils/cycleAnalytics';
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -66,6 +68,7 @@ export function HomeScreen() {
     logs, settings, cycleDay, currentPhase, phaseIcon,
     daysUntilNextPeriod, nextPeriodDate, fertileStart, fertileEnd,
     lastPeriodStart,
+    periodStarts,
     lateByDays,
     ovulationDate,
     predictedPeriodRangeStart,
@@ -75,6 +78,11 @@ export function HomeScreen() {
     estimatedCycleLength,
     estimatedPeriodLength,
   } = useCycle();
+
+  const cycleAnalysis = useMemo(
+    () => analyzeCyclePatterns(logs, periodStarts, settings.cycleLength),
+    [logs, periodStarts, settings.cycleLength]
+  );
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -109,6 +117,13 @@ export function HomeScreen() {
 
   const isPeriodApproaching = Boolean(
     hasData && !isPeriodActive && !isPeriodLate && !isPeriodDueToday && daysUntilNextPeriod !== null && daysUntilNextPeriod > 0 && daysUntilNextPeriod <= 5
+  );
+
+  const showPmsForecast = Boolean(
+    hasData &&
+    !isPeriodActive &&
+    !isPeriodLate &&
+    (isPeriodApproaching || cycleAnalysis.pmsForecast.isUpcoming)
   );
 
   // Determine Ring presentation attributes
@@ -491,6 +506,99 @@ export function HomeScreen() {
             <p style={{ margin: 0, fontSize: '11px', fontWeight: 600, color: '#6B7280' }}>
               Predicted period window: {nextPeriodWindow}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Flo-Style Premenstrual (PMS) Forecast Card ────────────────────── */}
+      {showPmsForecast && (
+        <div style={{ padding: '12px 16px 0' }}>
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%)',
+              borderRadius: '20px',
+              padding: '16px',
+              border: '1.5px solid #E9D5FF',
+              boxShadow: '0 4px 16px rgba(168, 85, 247, 0.1)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>🔮</span>
+                <span style={{ fontSize: '14px', fontWeight: 800, color: '#6B21A8' }}>
+                  Premenstrual Forecast (PMS)
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: '#7C3AED',
+                  background: 'rgba(255, 255, 255, 0.85)',
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  border: '1px solid #DDD6FE',
+                }}
+              >
+                In ~{daysUntilNextPeriod} {daysUntilNextPeriod === 1 ? 'day' : 'days'}
+              </span>
+            </div>
+
+            <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#581C87', fontWeight: 600, lineHeight: 1.4 }}>
+              {cycleAnalysis.pmsPatterns.length > 0
+                ? 'Based on your previous cycles, here are symptoms you often experience before your period:'
+                : 'Your period is predicted soon. Notice changes in mood, cramps, or sleep? Log them below to tailor future PMS forecasts.'}
+            </p>
+
+            {cycleAnalysis.pmsPatterns.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                {cycleAnalysis.pmsPatterns.slice(0, 4).map((p, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      border: '1px solid #D8B4FE',
+                      borderRadius: '999px',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: '#6B21A8',
+                    }}
+                  >
+                    <span>{p.category === 'mood' ? '🌸' : '⚡'}</span>
+                    <span>{p.name}</span>
+                    <span style={{ color: '#A855F7', fontSize: '10px' }}>({p.frequencyPercent}%)</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(216, 180, 254, 0.5)', paddingTop: '10px', marginTop: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#7E22CE', fontWeight: 600 }}>
+                💡 Tip: Light walks, hydration & rest help soothe PMS
+              </span>
+              <button
+                onClick={() => navigate(`/log?date=${todayKey}`)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#6D28D9',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontFamily: "'Nunito', sans-serif",
+                  textDecoration: 'underline',
+                }}
+              >
+                Log today
+              </button>
+            </div>
           </div>
         </div>
       )}
