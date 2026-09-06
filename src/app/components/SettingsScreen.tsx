@@ -13,6 +13,7 @@ import {
   Pencil,
   Check,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { useUser } from '../context/UserContext';
@@ -23,6 +24,8 @@ import { createEncryptedBackup, downloadBackupFile, restoreEncryptedBackup } fro
 import { CloudSyncSection } from './CloudSyncSection';
 import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 import { HelpSupportModal } from './HelpSupportModal';
+import { WhatsNewModal } from './WhatsNewModal';
+import { CURRENT_APP_VERSION } from '../config/whatsNew';
 import {
   WEB_NOTIFICATION_SUPPORT_MESSAGE,
   type NotificationSettings,
@@ -92,6 +95,7 @@ export function SettingsScreen() {
   const [showBackupGuide, setShowBackupGuide] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   const handleSaveName = () => {
     const trimmed = nameInput.trim();
@@ -769,6 +773,7 @@ export function SettingsScreen() {
           }}
         >
           {[
+            { icon: Sparkles, label: "What's New", color: '#9333EA', desc: `Version ${CURRENT_APP_VERSION} updates` },
             { icon: Shield, label: 'Privacy & Security', color: '#059669', desc: 'Privacy policy & terms of service' },
             { icon: HelpCircle, label: 'Help & Support', color: '#0EA5E9', desc: 'FAQs, usage tips & support' },
             { icon: Trash2, label: 'Delete All Data', color: '#EF4444', desc: 'Permanently erase your data' },
@@ -776,6 +781,7 @@ export function SettingsScreen() {
             <button
               key={label}
               onClick={() => {
+                if (label === "What's New") setShowWhatsNew(true);
                 if (label === 'Privacy & Security') handlePrivacyInfo();
                 if (label === 'Help & Support') handleHelp();
                 if (label === 'Delete All Data') handleDeleteAllData();
@@ -837,6 +843,12 @@ export function SettingsScreen() {
       <HelpSupportModal
         isOpen={showHelpModal}
         onClose={() => setShowHelpModal(false)}
+      />
+
+      {/* What's New Release Modal */}
+      <WhatsNewModal
+        isOpen={showWhatsNew}
+        onClose={() => setShowWhatsNew(false)}
       />
     </div>
   );

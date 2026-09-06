@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router';
 import { BottomNav } from './BottomNav';
 import { InAppReminderPrompt } from './InAppReminderPrompt';
 import { PwaInstallGuide } from './PwaInstallGuide';
+import { WhatsNewModal } from './WhatsNewModal';
 
 export function Layout() {
   const location = useLocation();
@@ -37,6 +38,7 @@ export function Layout() {
 
       <InAppReminderPrompt />
       <PwaInstallGuide />
+      <WhatsNewModal autoCheck={true} />
 
       {/* Bottom Navigation */}
       {!isLogScreen && <BottomNav />}
