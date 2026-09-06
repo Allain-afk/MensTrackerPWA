@@ -19,8 +19,20 @@ export const CURRENT_RELEASE_INFO: ReleaseVersion = {
   version: CURRENT_APP_VERSION,
   releaseDate: 'September 2026',
   title: "What's New in MensTracker ✨",
-  subtitle: 'Improved health features, smarter predictions, and doctor reports — with 100% on-device privacy.',
+  subtitle: 'Modernized calendar, smart period logging, doctor reports, and improved cycle intelligence.',
   highlights: [
+    {
+      icon: '📅',
+      title: 'Modernized Calendar & Quick Navigation',
+      description: 'Frosted glass header with 1-month step arrows, interactive Month & Year picker to jump across years, quick filter pills, and a detailed day inspection drawer.',
+      badge: 'New',
+    },
+    {
+      icon: '🩸',
+      title: 'Smart Period Catch-Up & Projection',
+      description: 'Logged late? 1-tap auto-fills missed days through today and automatically projects remaining days of your ongoing period on the calendar.',
+      badge: 'Smart',
+    },
     {
       icon: '🩺',
       title: "Doctor's Clinical Health Summary (PDF)",
@@ -41,7 +53,7 @@ export const CURRENT_RELEASE_INFO: ReleaseVersion = {
     },
     {
       icon: '📱',
-      title: 'Seamless Native Mobile Feel',
+      title: 'Seamless Native Mobile Experience',
       description: 'Full safe-area notch and home-bar support, edge-pull prevention, and screen fitting without navigation bar overlaps.',
       badge: 'Enhanced',
     },

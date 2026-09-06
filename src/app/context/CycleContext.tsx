@@ -137,7 +137,9 @@ interface CycleContextType {
   // Calendar helpers
   isPeriodDay: (dateKey: string) => boolean;
   isPredictedPeriod: (dateKey: string) => boolean;
+  isProjectedCurrentPeriod: (dateKey: string) => boolean;
   isFertileDay: (dateKey: string) => boolean;
+  autoFillPeriodRange: (startDateKey: string, endDateKey: string) => void;
 }
 
 const CycleContext = createContext<CycleContextType>({} as CycleContextType);
@@ -163,6 +165,38 @@ export function CycleProvider({ children }: { children: ReactNode }) {
   const updateSettings = useCallback((s: Partial<CycleSettings>) => {
     updateCycleSettings(s);
   }, [updateCycleSettings]);
+
+  const autoFillPeriodRange = useCallback((startDateKey: string, endDateKey: string) => {
+    const start = keyToDate(startDateKey);
+    const end = keyToDate(endDateKey);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    if (start > end) return;
+
+    const current = new Date(start);
+    while (current <= end) {
+      const k = dateToKey(current);
+      const existing = logs[k];
+      const updated: DayLog = {
+        flow: existing?.flow ?? 'Medium',
+        moods: existing?.moods ?? [],
+        symptoms: existing?.symptoms ?? [],
+        notes: existing?.notes ?? '',
+        isPeriod: true,
+        hadIntimacy: existing?.hadIntimacy ?? false,
+        protectionUsed: existing?.protectionUsed ?? null,
+        intimacyNotes: existing?.intimacyNotes ?? '',
+        sleepQuality: existing?.sleepQuality ?? null,
+        energyLevel: existing?.energyLevel ?? null,
+        waterGlasses: existing?.waterGlasses ?? 0,
+        cervicalMucus: existing?.cervicalMucus ?? null,
+        medications: existing?.medications ?? [],
+        tags: existing?.tags ?? [],
+      };
+      saveLog(k, updated);
+      current.setDate(current.getDate() + 1);
+    }
+  }, [logs, saveLog]);
 
   const computed = useMemo(() => {
     const todayDate = new Date();
@@ -256,9 +290,23 @@ export function CycleProvider({ children }: { children: ReactNode }) {
 
     // Build key sets for calendar
     const predictedPeriodKeys = new Set<string>();
+    const projectedCurrentPeriodKeys = new Set<string>();
     const fertileDayKeys = new Set<string>();
 
     if (lastPeriodStart) {
+      // 1. Current active period: project remaining days if we are still within expected period length
+      const daysSinceStart = getDaysBetween(lastPeriodStart, todayDate);
+      if (daysSinceStart >= 0 && daysSinceStart < estimatedPeriodLength) {
+        for (let i = 0; i < estimatedPeriodLength; i++) {
+          const currentPeriodDay = addDays(lastPeriodStart, i);
+          const key = dateToKey(currentPeriodDay);
+          if (!logs[key]?.isPeriod) {
+            predictedPeriodKeys.add(key);
+            projectedCurrentPeriodKeys.add(key);
+          }
+        }
+      }
+
       // Predicted periods: next 4 cycles forward
       for (let n = 1; n <= 4; n++) {
         const cycleStart = addDays(lastPeriodStart, n * estimatedCycleLength);
@@ -309,9 +357,11 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       cycleLengthsHistory,
       isPeriodDay: (key: string) => !!logs[key]?.isPeriod,
       isPredictedPeriod: (key: string) => predictedPeriodKeys.has(key),
+      isProjectedCurrentPeriod: (key: string) => projectedCurrentPeriodKeys.has(key),
       isFertileDay: (key: string) => fertileDayKeys.has(key) && !logs[key]?.isPeriod,
+      autoFillPeriodRange,
     };
-  }, [logs, settings]);
+  }, [logs, settings, autoFillPeriodRange]);
 
   return (
     <CycleContext.Provider value={{ logs, settings, saveLog, deleteLog, updateSettings, ...computed }}>
