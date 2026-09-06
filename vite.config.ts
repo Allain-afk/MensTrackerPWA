@@ -72,5 +72,15 @@ export default defineConfig({
     ],
   },
   assetsInclude: ['**/*.svg', '**/*.csv', '**/*.woff2'],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
 });
 
