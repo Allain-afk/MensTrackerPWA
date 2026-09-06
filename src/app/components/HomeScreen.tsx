@@ -66,11 +66,14 @@ export function HomeScreen() {
     logs, settings, cycleDay, currentPhase, phaseIcon,
     daysUntilNextPeriod, nextPeriodDate, fertileStart, fertileEnd,
     lastPeriodStart,
+    lateByDays,
+    ovulationDate,
     predictedPeriodRangeStart,
     predictedPeriodRangeEnd,
     predictionConfidenceLabel,
     predictionConfidencePercent,
     estimatedCycleLength,
+    estimatedPeriodLength,
   } = useCycle();
 
   const today = new Date();
@@ -81,14 +84,173 @@ export function HomeScreen() {
   const hasData = !!lastPeriodStart;
 
   const cycleLength = estimatedCycleLength || settings.cycleLength;
+  const periodLength = estimatedPeriodLength || settings.periodLength;
   const radius = RING_RADIUS;
   const circumference = 2 * Math.PI * radius;
-  const progress = hasData && cycleDay ? Math.min((cycleDay - 1) / cycleLength, 1) : 0;
-  const strokeDashoffset = circumference * (1 - progress);
 
-  // Fertile window status
+  // Cycle states (Flo-style)
+  const isPeriodActive = Boolean(
+    todayLog?.isPeriod || (hasData && cycleDay !== null && cycleDay <= periodLength && lateByDays === 0)
+  );
+
+  const isPeriodLate = Boolean(hasData && !isPeriodActive && lateByDays > 0);
+
+  const isPeriodDueToday = Boolean(
+    hasData && !isPeriodActive && !isPeriodLate && daysUntilNextPeriod === 0
+  );
+
+  const isFertileNow = Boolean(
+    hasData && !isPeriodActive && !isPeriodLate && fertileStart && fertileEnd && today >= fertileStart && today <= fertileEnd
+  );
+
+  const isOvulationDay = Boolean(
+    hasData && !isPeriodActive && !isPeriodLate && ovulationDate && today.getTime() === ovulationDate.getTime()
+  );
+
+  const isPeriodApproaching = Boolean(
+    hasData && !isPeriodActive && !isPeriodLate && !isPeriodDueToday && daysUntilNextPeriod !== null && daysUntilNextPeriod > 0 && daysUntilNextPeriod <= 5
+  );
+
+  // Determine Ring presentation attributes
+  let ringColor1 = '#F472B6';
+  let ringColor2 = '#8B5CF6';
+  let ringGlow = 'rgba(236, 72, 153, 0.35)';
+  let topRingLabel = `DAY ${cycleDay ?? 0} OF ${cycleLength}`;
+  let heroNumber: string | number = cycleDay ?? '—';
+  let heroNumberSize = '42px';
+  let heroSubtitle = 'Cycle Day';
+  let badgeLabel = currentPhase;
+  let badgeIconDisplay = phaseIcon;
+  let badgeBg = 'rgba(255, 255, 255, 0.9)';
+  let badgeColor = '#7C3AED';
+  let badgeBorder = '#E9D5FF';
+  let ringProgress = hasData && cycleDay ? Math.min(cycleDay / cycleLength, 1) : 0;
+  let showQuickLogButton = false;
+  let quickLogText = '🩸 Log Period';
+
+  if (!hasData) {
+    ringColor1 = '#DDD6FE';
+    ringColor2 = '#C084FC';
+    ringGlow = 'rgba(192, 132, 252, 0.25)';
+    topRingLabel = 'WELCOME';
+    heroNumber = '🌸';
+    heroNumberSize = '36px';
+    heroSubtitle = 'No cycle data yet';
+    badgeLabel = 'Tap to start tracking';
+    badgeIconDisplay = '✨';
+    ringProgress = 0;
+  } else if (isPeriodActive) {
+    ringColor1 = '#FB7185';
+    ringColor2 = '#E11D48';
+    ringGlow = 'rgba(225, 29, 72, 0.4)';
+    topRingLabel = 'MENSTRUATION';
+    heroNumber = cycleDay ? `Day ${cycleDay}` : 'Period';
+    heroNumberSize = '36px';
+    heroSubtitle = todayLog?.flow ? `${todayLog.flow} Flow` : 'Period Day';
+    badgeLabel = 'Menstrual Phase';
+    badgeIconDisplay = '🩸';
+    badgeBg = '#FFF1F2';
+    badgeColor = '#BE123C';
+    badgeBorder = '#FECDD3';
+    ringProgress = Math.min((cycleDay ?? 1) / periodLength, 1);
+    showQuickLogButton = !todayLog?.isPeriod;
+    quickLogText = "🩸 Log Today's Period";
+  } else if (isPeriodLate) {
+    // ⚠️ Late Period (Flo-style)
+    ringColor1 = '#F97316';
+    ringColor2 = '#EF4444';
+    ringGlow = 'rgba(239, 68, 68, 0.45)';
+    topRingLabel = `CYCLE DAY ${cycleDay}`;
+    heroNumber = lateByDays;
+    heroNumberSize = '48px';
+    heroSubtitle = lateByDays === 1 ? 'Day Late' : 'Days Late';
+    badgeLabel = lateByDays === 1 ? 'Period is 1 day late' : `Period is ${lateByDays} days late`;
+    badgeIconDisplay = '⏳';
+    badgeBg = '#FFF7ED';
+    badgeColor = '#C2410C';
+    badgeBorder = '#FFEDD5';
+    ringProgress = 1;
+    showQuickLogButton = true;
+    quickLogText = '🩸 Log Period';
+  } else if (isPeriodDueToday) {
+    ringColor1 = '#F472B6';
+    ringColor2 = '#E11D48';
+    ringGlow = 'rgba(244, 114, 182, 0.5)';
+    topRingLabel = `DAY ${cycleDay} OF ${cycleLength}`;
+    heroNumber = 'Today';
+    heroNumberSize = '36px';
+    heroSubtitle = 'Period Expected';
+    badgeLabel = 'Period Due Today';
+    badgeIconDisplay = '🩸';
+    badgeBg = '#FDF2F8';
+    badgeColor = '#BE185D';
+    badgeBorder = '#FCE7F3';
+    ringProgress = 1;
+    showQuickLogButton = true;
+    quickLogText = 'Did it start? Log here';
+  } else if (isOvulationDay) {
+    ringColor1 = '#34D399';
+    ringColor2 = '#059669';
+    ringGlow = 'rgba(16, 185, 129, 0.4)';
+    topRingLabel = 'PEAK FERTILITY';
+    heroNumber = 'Peak';
+    heroNumberSize = '36px';
+    heroSubtitle = 'Ovulation Day';
+    badgeLabel = 'Ovulatory Phase';
+    badgeIconDisplay = '⭐';
+    badgeBg = '#ECFDF5';
+    badgeColor = '#047857';
+    badgeBorder = '#A7F3D0';
+    ringProgress = Math.min((cycleDay! - 1) / cycleLength, 1);
+  } else if (isFertileNow) {
+    ringColor1 = '#34D399';
+    ringColor2 = '#10B981';
+    ringGlow = 'rgba(16, 185, 129, 0.35)';
+    topRingLabel = 'FERTILE WINDOW';
+    heroNumber = 'High';
+    heroNumberSize = '38px';
+    heroSubtitle = 'Chance of pregnancy';
+    badgeLabel = 'Fertile Window';
+    badgeIconDisplay = '🌱';
+    badgeBg = '#ECFDF5';
+    badgeColor = '#047857';
+    badgeBorder = '#A7F3D0';
+    ringProgress = Math.min((cycleDay! - 1) / cycleLength, 1);
+  } else if (isPeriodApproaching) {
+    ringColor1 = '#C084FC';
+    ringColor2 = '#8B5CF6';
+    ringGlow = 'rgba(139, 92, 246, 0.35)';
+    topRingLabel = `DAY ${cycleDay} OF ${cycleLength}`;
+    heroNumber = daysUntilNextPeriod ?? 1;
+    heroNumberSize = '48px';
+    heroSubtitle = daysUntilNextPeriod === 1 ? 'Day until period' : 'Days until period';
+    badgeLabel = 'Luteal Phase';
+    badgeIconDisplay = '🍂';
+    badgeBg = '#FAF5FF';
+    badgeColor = '#7E22CE';
+    badgeBorder = '#F3E8FF';
+    ringProgress = Math.min((cycleDay! - 1) / cycleLength, 1);
+  } else {
+    ringColor1 = '#F472B6';
+    ringColor2 = '#A855F7';
+    ringGlow = 'rgba(236, 72, 153, 0.35)';
+    topRingLabel = `DAY ${cycleDay} OF ${cycleLength}`;
+    heroNumber = `Day ${cycleDay}`;
+    heroNumberSize = '38px';
+    heroSubtitle = currentPhase;
+    badgeLabel = currentPhase;
+    badgeIconDisplay = phaseIcon;
+    badgeBg = 'rgba(255, 255, 255, 0.9)';
+    badgeColor = '#7C3AED';
+    badgeBorder = '#E9D5FF';
+    ringProgress = Math.min((cycleDay! - 1) / cycleLength, 1);
+  }
+
+  const strokeDashoffset = circumference * (1 - ringProgress);
+
+  // Fertile window status label
   let fertileLabel = '—';
-  if (fertileStart && fertileEnd) {
+  if (fertileStart && fertileEnd && !isPeriodLate) {
     if (today >= fertileStart && today <= fertileEnd) {
       fertileLabel = 'Now 🟢';
     } else if (today < fertileStart) {
@@ -97,11 +259,15 @@ export function HomeScreen() {
     } else {
       fertileLabel = 'Ended';
     }
+  } else if (isPeriodLate) {
+    fertileLabel = 'Ended';
   }
 
   // Next period display
   let nextPeriodLabel = '—';
-  if (nextPeriodDate) {
+  if (isPeriodLate) {
+    nextPeriodLabel = `${lateByDays}d late`;
+  } else if (nextPeriodDate) {
     nextPeriodLabel = `${MONTH_NAMES[nextPeriodDate.getMonth()]} ${nextPeriodDate.getDate()}`;
   }
 
@@ -161,14 +327,13 @@ export function HomeScreen() {
         </div>
 
         {/* Cycle ring */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
           <div style={{ position: 'relative', width: '220px', height: '220px' }}>
             <svg viewBox="0 0 240 240" width="220" height="220" style={{ display: 'block' }}>
               <defs>
                 <linearGradient id="ringGrad" gradientUnits="userSpaceOnUse" x1="20" y1="20" x2="220" y2="220">
-                  <stop offset="0%" stopColor="#F472B6" />
-                  <stop offset="50%" stopColor="#C084FC" />
-                  <stop offset="100%" stopColor="#7C3AED" />
+                  <stop offset="0%" stopColor={ringColor1} />
+                  <stop offset="100%" stopColor={ringColor2} />
                 </linearGradient>
                 <radialGradient id="innerGrad" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="#fdf4ff" />
@@ -180,7 +345,6 @@ export function HomeScreen() {
                 </filter>
               </defs>
 
-              <circle cx={RING_CENTER} cy={RING_CENTER} r="110" fill="none" stroke="#f3e8ff" strokeWidth="1" strokeDasharray="4 6" />
               <circle cx={RING_CENTER} cy={RING_CENTER} r={radius} fill="none" stroke="#ede9fe" strokeWidth="18" />
 
               {hasData && (
@@ -191,24 +355,26 @@ export function HomeScreen() {
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   transform={`rotate(-90 ${RING_CENTER} ${RING_CENTER})`}
-                  filter="url(#glow)"
+                  style={{ filter: `drop-shadow(0 0 6px ${ringGlow})` }}
                 />
               )}
 
               <circle cx={RING_CENTER} cy={RING_CENTER} r="72" fill="url(#innerGrad)" />
 
               {/* Tick marks */}
-              {Array.from({ length: cycleLength }).map((_, i) => {
-                const angle = (i / cycleLength) * 2 * Math.PI - Math.PI / 2;
+              {Array.from({ length: isPeriodLate ? 28 : Math.min(cycleLength, 35) }).map((_, i) => {
+                const totalTicks = isPeriodLate ? 28 : Math.min(cycleLength, 35);
+                const angle = (i / totalTicks) * 2 * Math.PI - Math.PI / 2;
                 const tickR = 108;
                 const x = 120 + tickR * Math.cos(angle);
                 const y = 120 + tickR * Math.sin(angle);
-                const isDone = cycleDay !== null && i < cycleDay;
+                const isDone = cycleDay !== null && (isPeriodLate || i < cycleDay);
                 return (
                   <circle key={i} cx={x} cy={y}
-                    r={cycleDay !== null && i === cycleDay - 1 ? 4 : 2.5}
+                    r={!isPeriodLate && cycleDay !== null && i === cycleDay - 1 ? 4 : 2.5}
                     fill={
                       !hasData ? '#E9D5FF'
+                      : isPeriodLate ? (i % 2 === 0 ? '#FB923C' : '#FDBA74')
                       : isDone ? (i === (cycleDay ?? 0) - 1 ? '#9333EA' : '#C084FC')
                       : '#E9D5FF'
                     }
@@ -219,34 +385,70 @@ export function HomeScreen() {
 
             {/* Inner text */}
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-              {hasData && cycleDay !== null ? (
-                <>
-                  <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, letterSpacing: '0.5px' }}>
-                    DAY {cycleDay} OF {cycleLength}
-                  </span>
-                  <span style={{ fontSize: '44px', fontWeight: 900, lineHeight: 1, background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    {daysUntilNextPeriod === 0 ? '🌸' : daysUntilNextPeriod ?? '?'}
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>
-                    {daysUntilNextPeriod === 0 ? 'Period may\nstart today' : 'Days until\nNext Period'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span style={{ fontSize: '32px', lineHeight: 1 }}>🌸</span>
-                  <span style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: 700, textAlign: 'center', lineHeight: 1.4, marginTop: '4px' }}>
-                    No cycle<br />data yet
-                  </span>
-                </>
-              )}
+              <span style={{ fontSize: '10.5px', color: '#9CA3AF', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                {topRingLabel}
+              </span>
+              <span style={{
+                fontSize: heroNumberSize,
+                fontWeight: 900,
+                lineHeight: 1.05,
+                background: `linear-gradient(135deg, ${ringColor1}, ${ringColor2})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>
+                {heroNumber}
+              </span>
+              <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 700, textAlign: 'center', lineHeight: 1.3, marginTop: '2px', whiteSpace: 'pre-line' }}>
+                {heroSubtitle}
+              </span>
             </div>
           </div>
 
           {/* Phase badge */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.9)', border: '1.5px solid #E9D5FF', borderRadius: '999px', padding: '6px 14px', boxShadow: '0 2px 8px rgba(139,92,246,0.12)', backdropFilter: 'blur(8px)' }}>
-            <span style={{ fontSize: '14px' }}>{phaseIcon}</span>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#7C3AED' }}>{currentPhase}</span>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: badgeBg,
+            border: `1.5px solid ${badgeBorder}`,
+            borderRadius: '999px',
+            padding: '6px 14px',
+            boxShadow: '0 2px 8px rgba(139,92,246,0.1)',
+            backdropFilter: 'blur(8px)',
+          }}>
+            <span style={{ fontSize: '14px' }}>{badgeIconDisplay}</span>
+            <span style={{ fontSize: '13px', fontWeight: 800, color: badgeColor }}>{badgeLabel}</span>
           </div>
+
+          {/* Flo-style Quick Log action button */}
+          {showQuickLogButton && (
+            <button
+              type="button"
+              className="tap-active animate-slide-up"
+              onClick={() => navigate(`/log?date=${todayKey}`)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 20px',
+                background: isPeriodLate
+                  ? 'linear-gradient(135deg, #F97316, #EF4444)'
+                  : 'linear-gradient(135deg, #F472B6, #8B5CF6)',
+                border: 'none',
+                borderRadius: '999px',
+                color: '#ffffff',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontFamily: "'Nunito', sans-serif",
+                boxShadow: isPeriodLate
+                  ? '0 4px 14px rgba(239, 68, 68, 0.35)'
+                  : '0 4px 14px rgba(244, 114, 182, 0.35)',
+              }}
+            >
+              {quickLogText}
+            </button>
+          )}
         </div>
       </div>
 
@@ -255,13 +457,19 @@ export function HomeScreen() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           {[
             { icon: <Droplets size={16} color="#EC4899" />, label: 'Cycle Day', value: cycleDay != null ? `${cycleDay}` : '—' },
-            { icon: <Moon size={16} color="#8B5CF6" />, label: 'Next Period', value: nextPeriodLabel },
+            { icon: <Moon size={16} color="#8B5CF6" />, label: 'Predicted Next Period', value: nextPeriodLabel },
             { icon: <Flower2 size={16} color="#10B981" />, label: 'Fertile', value: fertileLabel },
           ].map((stat) => (
             <div key={stat.label} style={{ background: '#ffffff', borderRadius: '24px', padding: '14px 8px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '1px solid #F3F4F6' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>{stat.icon}</div>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#1F2937' }}>{stat.value}</div>
-              <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, marginTop: '2px' }}>{stat.label}</div>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 800,
+                color: stat.label === 'Predicted Next Period' && isPeriodLate ? '#EA580C' : '#1F2937'
+              }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 600, marginTop: '2px', lineHeight: 1.25 }}>{stat.label}</div>
             </div>
           ))}
         </div>

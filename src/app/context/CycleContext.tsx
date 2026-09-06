@@ -98,6 +98,7 @@ export function getPeriodLength(startDate: Date, logs: Record<string, DayLog>): 
 
 /** Derive current cycle phase label and icon from cycle day. */
 export function getCyclePhase(cycleDay: number, cycleLength: number): { phase: string; icon: string } {
+  if (cycleDay > cycleLength) return { phase: 'Period Late', icon: '⏳' };
   const ovDay = cycleLength - 14;
   if (cycleDay <= 5) return { phase: 'Menstrual Phase', icon: '🩸' };
   if (cycleDay < ovDay - 1) return { phase: 'Follicular Phase', icon: '🌱' };
@@ -222,23 +223,32 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       cycleDay = daysSince + 1;
 
       const expectedStartThisCycle = addDays(lastPeriodStart, estimatedCycleLength);
-      lateByDays = Math.max(0, getDaysBetween(expectedStartThisCycle, todayDate));
+      const diffFromExpected = getDaysBetween(expectedStartThisCycle, todayDate);
 
-      // Advance predicted period to next future occurrence
-      let np = addDays(lastPeriodStart, estimatedCycleLength);
-      while (getDaysBetween(todayDate, np) < 0) {
-        np = addDays(np, estimatedCycleLength);
+      if (diffFromExpected > 0) {
+        // Overdue / Late period
+        lateByDays = diffFromExpected;
+        daysUntilNextPeriod = 0;
+        nextPeriodDate = expectedStartThisCycle;
+      } else if (diffFromExpected === 0) {
+        // Due today
+        lateByDays = 0;
+        daysUntilNextPeriod = 0;
+        nextPeriodDate = expectedStartThisCycle;
+      } else {
+        // In the future
+        lateByDays = 0;
+        daysUntilNextPeriod = getDaysBetween(todayDate, expectedStartThisCycle);
+        nextPeriodDate = expectedStartThisCycle;
       }
-      nextPeriodDate = np;
-      daysUntilNextPeriod = getDaysBetween(todayDate, np);
 
       const perimenopauseWindowBonus = settings.perimenopauseMode ? 2 : 0;
       const windowRadius = Math.max(1, Math.round(Math.min(7, (adjustedVariability || 1.5) + perimenopauseWindowBonus)));
-      predictedPeriodRangeStart = addDays(np, -windowRadius);
-      predictedPeriodRangeEnd = addDays(np, windowRadius);
+      predictedPeriodRangeStart = addDays(expectedStartThisCycle, -windowRadius);
+      predictedPeriodRangeEnd = addDays(expectedStartThisCycle, windowRadius);
 
       // Ovulation / fertile window
-      ovulationDate = addDays(np, -14);
+      ovulationDate = addDays(expectedStartThisCycle, -14);
       const fertileBuffer = adjustedVariability >= 3 ? 1 : 0;
       fertileStart = addDays(ovulationDate, -5 - fertileBuffer);
       fertileEnd = addDays(ovulationDate, 1 + fertileBuffer);

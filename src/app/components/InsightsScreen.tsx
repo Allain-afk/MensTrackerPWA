@@ -321,7 +321,7 @@ export function InsightsScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
                 nextPeriodStr && {
-                  label: 'Next Period',
+                  label: 'Predicted Next Period',
                   value: nextPeriodStr,
                   icon: '🌸',
                   note:
