@@ -1,5 +1,5 @@
 export const APP_COPY = {
-  appName: 'MensTracker',
+  appName: 'BloomCycle',
   appTagline: 'Your body, your rhythm',
   supportEmail: 'support@allainafk.dev',
   onboardingBadge: 'WELCOME',

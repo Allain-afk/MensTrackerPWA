@@ -1,12 +1,12 @@
-# MensTracker
+# BloomCycle
 
-MensTracker is an offline-first, privacy-focused Progressive Web Application (PWA) designed for menstrual cycle tracking, symptom monitoring, and personal health analytics. Built on top of client-side SQLite via WebAssembly, all sensitive health data is stored directly on the user's device by default, with optional cloud backup and synchronization through Supabase.
+BloomCycle is an offline-first, privacy-focused Progressive Web Application (PWA) designed for menstrual cycle tracking, symptom monitoring, and personal health analytics. Built on top of client-side SQLite via WebAssembly, all sensitive health data is stored directly on the user's device by default, with optional cloud backup and synchronization through Supabase.
 
 ---
 
 ## Overview
 
-Most menstrual tracking applications store intimate personal health data on remote commercial servers. MensTracker is designed with a privacy-first mindset:
+Most menstrual tracking applications store intimate personal health data on remote commercial servers. BloomCycle is designed with a privacy-first mindset:
 
 - Complete Offline Autonomy: All cycle data, symptom logs, notes, and preferences are written to an embedded SQLite database running directly in the browser using the Origin Private File System (OPFS).
 - Zero Compulsory Accounts: The application works out of the box without registration, login, or internet connectivity.

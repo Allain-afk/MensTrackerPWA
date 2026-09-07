@@ -16,8 +16,8 @@ export default defineConfig({
       includeAssets: ['apple-touch-icon.png'],
       manifest: {
         id: '/',
-        name: 'MensTracker',
-        short_name: 'MensTracker',
+        name: 'BloomCycle',
+        short_name: 'BloomCycle',
         description: 'Offline menstrual and cycle tracking on your device.',
         start_url: '/',
         scope: '/',

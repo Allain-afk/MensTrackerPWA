@@ -28,13 +28,13 @@ function getGuideSteps(context: ReturnType<typeof getInstallGuideContext>) {
   if (context.canInstallDirectly) {
     return {
       badge: context.isAndroid ? 'Android Install' : 'Installable',
-      title: 'Install MensTracker on your phone',
+      title: 'Install BloomCycle on your phone',
       description: 'Save it to your home screen so it opens like a regular app and loads faster next time.',
       primaryLabel: 'Install App',
       steps: [
         { title: 'Tap Install App', body: 'Your browser already supports a direct install prompt for this site.' },
         { title: 'Confirm the install', body: 'Choose Install when your browser asks for confirmation.' },
-        { title: 'Open from your home screen', body: 'Next time, tap the MensTracker icon instead of opening the website.' },
+        { title: 'Open from your home screen', body: 'Next time, tap the BloomCycle icon instead of opening the website.' },
       ] satisfies StepContent[],
     };
   }
@@ -46,9 +46,9 @@ function getGuideSteps(context: ReturnType<typeof getInstallGuideContext>) {
       description: 'On iPhone and iPad, home screen install is handled by Safari instead of other browsers.',
       primaryLabel: '',
       steps: [
-        { title: 'Open this page in Safari', body: 'Use your browser menu to open MensTracker in Safari first.' },
+        { title: 'Open this page in Safari', body: 'Use your browser menu to open BloomCycle in Safari first.' },
         { title: 'Tap Share', body: 'In Safari, tap the Share button at the bottom of the screen.' },
-        { title: 'Choose Add to Home Screen', body: 'After that, MensTracker will appear on your home screen like an app.' },
+        { title: 'Choose Add to Home Screen', body: 'After that, BloomCycle will appear on your home screen like an app.' },
       ] satisfies StepContent[],
     };
   }
@@ -56,13 +56,13 @@ function getGuideSteps(context: ReturnType<typeof getInstallGuideContext>) {
   if (context.isIOS) {
     return {
       badge: 'Add to Home Screen',
-      title: 'Turn MensTracker into an app',
+      title: 'Turn BloomCycle into an app',
       description: 'You can save this to your iPhone home screen so it opens full-screen like a normal app.',
       primaryLabel: '',
       steps: [
         { title: 'Tap Share', body: 'Use the Share button in Safari at the bottom of the screen.' },
         { title: 'Tap Add to Home Screen', body: 'Scroll the share sheet until you see Add to Home Screen.' },
-        { title: 'Tap Add', body: 'The MensTracker icon will be ready on your home screen after that.' },
+        { title: 'Tap Add', body: 'The BloomCycle icon will be ready on your home screen after that.' },
       ] satisfies StepContent[],
     };
   }
@@ -70,20 +70,20 @@ function getGuideSteps(context: ReturnType<typeof getInstallGuideContext>) {
   if (context.isAndroid) {
     return {
       badge: 'Add to Home Screen',
-      title: 'Turn MensTracker into an app',
+      title: 'Turn BloomCycle into an app',
       description: 'You can save this to your Android home screen so it opens full-screen like a normal app.',
       primaryLabel: '',
       steps: [
         { title: 'Open browser menu', body: 'Tap the three-dot menu icon (⋮) in your browser.' },
         { title: 'Tap Add to Home screen', body: 'Select "Add to Home screen" or "Install app" from the menu.' },
-        { title: 'Tap Add', body: 'The MensTracker icon will be ready on your home screen after that.' },
+        { title: 'Tap Add', body: 'The BloomCycle icon will be ready on your home screen after that.' },
       ] satisfies StepContent[],
     };
   }
 
   return {
     badge: 'Install Tip',
-    title: 'Add MensTracker to your home screen',
+    title: 'Add BloomCycle to your home screen',
     description: 'Install it once so you can open it from your phone like a regular app instead of visiting the website.',
     primaryLabel: '',
     steps: [

@@ -151,7 +151,7 @@ export function PwaUpdateModal({
               }}
             >
               <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#4B5563', lineHeight: 1.5, fontWeight: 600 }}>
-                A newer build of MensTracker has been downloaded in the background.
+                A newer build of BloomCycle has been downloaded in the background.
               </p>
               <p style={{ margin: 0, fontSize: '12px', color: '#7C3AED', fontWeight: 700 }}>
                 Reload now to apply the latest features, calendar improvements, and offline assets.
@@ -231,7 +231,7 @@ export function PwaUpdateModal({
                   You're Up to Date! 🎉
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#15803D', fontWeight: 700 }}>
-                  MensTracker v{CURRENT_APP_VERSION}
+                  BloomCycle v{CURRENT_APP_VERSION}
                 </p>
               </div>
             </div>

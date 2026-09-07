@@ -18,7 +18,7 @@ export const CURRENT_APP_VERSION = '1.3.0';
 export const CURRENT_RELEASE_INFO: ReleaseVersion = {
   version: CURRENT_APP_VERSION,
   releaseDate: 'September 2026',
-  title: "What's New in MensTracker ✨",
+  title: "What's New in BloomCycle ✨",
   subtitle: 'Modernized calendar, smart period logging, doctor reports, and improved cycle intelligence.',
   highlights: [
     {
