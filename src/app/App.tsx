@@ -16,6 +16,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { AuthProvider } from './context/AuthContext';
 import { SyncProvider } from './context/SyncContext';
 import { PwaUpdateProvider } from './context/PwaUpdateContext';
+import { Analytics } from '@vercel/analytics/react';
 
 type Phase = 'splash' | 'onboarding' | 'app';
 
@@ -105,6 +106,7 @@ export default function App() {
                   <OfflineBanner />
                   <AppFlow />
                   <Toaster position="top-center" />
+                  <Analytics />
                 </CycleProvider>
               </UserProvider>
             </SyncProvider>
